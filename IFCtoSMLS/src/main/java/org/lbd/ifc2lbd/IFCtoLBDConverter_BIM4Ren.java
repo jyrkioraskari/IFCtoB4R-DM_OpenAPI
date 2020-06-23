@@ -25,6 +25,7 @@ import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.bimserver.plugins.deserializers.DeserializeException;
@@ -207,6 +208,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 						spo.addProperty(RDF.type, LBD_NS.BOT.space);
 
 						addBoundingBox(spo,guid_space);
+						
 						IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream()
 								.map(rn -> rn.asResource()).forEach(element -> {
 									connectElement(spo, element);
@@ -394,8 +396,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 		OPM.addNameSpacesL3(lbd_general_output_model);
 
+		
 		lbd_general_output_model.setNsPrefix("rdf", RDF.uri);
 		lbd_general_output_model.setNsPrefix("rdfs", RDFS.uri);
+		lbd_general_output_model.setNsPrefix("owl", OWL.getURI());
 		lbd_general_output_model.setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#");
 		lbd_general_output_model.setNsPrefix("inst", uriBase);
 		// lbd_general_output_model.setNsPrefix("geo",
@@ -573,15 +577,18 @@ public class IFCtoLBDConverter_BIM4Ren {
 				if (localName.lastIndexOf('_') > 0)
 					localName = localName.substring(localName.lastIndexOf('_') + 1);
 				Resource uri = m.createResource(this.uriBase + "propertySingleValue_" + localName);
+				uri.addProperty(OWL.sameAs, r);
 				return uri;
 			}
 			if (localName.toLowerCase().startsWith("ifc"))
 				localName = localName.substring(3);
 			Resource uri = m.createResource(this.uriBase + product_type.toLowerCase() + "_" + localName);
+			uri.addProperty(OWL.sameAs, r);
 			return uri;
 		} else {
 			Resource guid_uri = m.createResource(
 					this.uriBase + product_type.toLowerCase() + "_" + GuidCompressor.uncompressGuidString(guid));
+			guid_uri.addProperty(OWL.sameAs, r);
 			return guid_uri;
 		}
 	}
