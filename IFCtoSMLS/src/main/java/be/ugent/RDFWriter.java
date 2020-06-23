@@ -42,7 +42,7 @@ import org.apache.jena.util.iterator.ExtendedIterator;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.lbd.ifc2lbd.ns.Namespace;
+import org.lbd.ifc2lbd.smls.ns.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

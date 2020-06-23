@@ -35,7 +35,8 @@ import org.bimserver.shared.exceptions.BimServerClientException;
 import org.bimserver.shared.exceptions.PublicInterfaceNotFoundException;
 import org.bimserver.shared.exceptions.ServiceException;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.lbd.ifc2lbd.IFCtoLBDConverter_BIM4Ren;
+import org.lbd.ifc2lbd.IFCtoLBDConverter;
+import org.lbd.ifc2lbd.smls.IFCtoLBDConverter_BIM4Ren;
 
 import de.rwth_aachen.dc.ifc2lbd.BimServerPasswords;
 
@@ -70,14 +71,14 @@ public class IFCtoLBD_SMLS_OpenAPI {
 	 * @return Returns a JSONLD formatted output
 	 */
 	@POST
-	@Path("/convertBIMProject/{project_name}")
+	@Path("/convertBIMProject2SMLS/{project_name}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
 	public Response convert(@PathParam("id") String project_name) {
 		try {
 			File ifFile=downloadLastRelease(project_name);
 
 			StringBuilder result_string=new StringBuilder();
-			extractLBD(ifFile, result_string);
+			extractLBD_SMLS(ifFile, result_string);
 			return Response.ok(result_string.toString(), MediaType.TEXT_PLAIN).build();
 
 		} catch (Exception e) {
@@ -89,11 +90,94 @@ public class IFCtoLBD_SMLS_OpenAPI {
 
 	
 	
+	
+	/**
+	 * Converts an IFC file into into RDF (LBD BOT https://w3c-lbd-cg.github.io/bot/)
+	 * 
+	 * @param ifcFile an IFC file
+	 * @return  TTL formatted LBD output
+	 */
+	@POST
+	@Path("/convertIFCtoLBD")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response convertIFCtoLBD(
+			@FormDataParam("ifcFile") InputStream ifcFile) {
+		try {
+			File tempIfcFile = File.createTempFile("ifc2lbd-", ".ifc");
+			tempIfcFile.deleteOnExit();
+
+			Files.copy(ifcFile, tempIfcFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			IOUtils.closeQuietly(ifcFile);
+			StringBuilder result_string=new StringBuilder();
+			extractLBD(tempIfcFile, result_string);
+			System.out.println(result_string.toString());
+			return Response.ok(result_string.toString(), MediaType.TEXT_PLAIN).build();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.noContent().build();
+	}
+	
+	/**
+	 * Converts an IFC file into into RDF (LBD BOT+SMLS)
+	 * 
+	 * @param ifcFile an IFC file
+	 * @return  JSONLD formatted output
+	 */
+	@POST
+	@Path("/convertIFCtoSMLS")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response convertIFCtoSMLS(
+			@FormDataParam("ifcFile") InputStream ifcFile) {
+		try {
+			File tempIfcFile = File.createTempFile("ifc2lbd-", ".ifc");
+			tempIfcFile.deleteOnExit();
+
+			Files.copy(ifcFile, tempIfcFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			IOUtils.closeQuietly(ifcFile);
+			StringBuilder result_string=new StringBuilder();
+			extractLBD_SMLS(tempIfcFile, result_string);
+			System.out.println(result_string.toString());
+			return Response.ok(result_string.toString(), MediaType.TEXT_PLAIN).build();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.noContent().build();
+	}
+
 	private void extractLBD(File ifcFile, StringBuilder result_string) {
+		IFCtoLBDConverter lbdconverter = new IFCtoLBDConverter("https://dot.dc.rwth-aachen.de/IFCtoLBDset", false, 3);
+		Model m = lbdconverter.convert(ifcFile.getAbsolutePath());
+
+		OutputStream ttl_output = new OutputStream() {
+			private StringBuilder string = new StringBuilder();
+
+			@Override
+			public void write(int b) throws IOException {
+				this.string.append((char) b);
+			}
+
+			public String toString() {
+				return this.string.toString();
+			}
+		};
+		//m.write(System.out, "TTL");
+		//m.write(ttl_output, "TTL");
+		RDFDataMgr.write(ttl_output, m, RDFFormat.TTL);
+		result_string.append(ttl_output.toString());
+	}
+
+	
+	private void extractLBD_SMLS(File ifcFile, StringBuilder result_string) {
 		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
 		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset");
 
-		// https://stackoverflow.com/questions/216894/get-an-outputstream-into-a-string
 		OutputStream ttl_output = new OutputStream() {
 			private StringBuilder string = new StringBuilder();
 
@@ -158,35 +242,6 @@ public class IFCtoLBD_SMLS_OpenAPI {
 		return null;
 	}
 
-	
-	/**
-	 * Converts an IFC file into into RDF (LBD_SMLS)
-	 * 
-	 * @param ifcFile an IFC file
-	 * @return  JSONLD formatted output
-	 */
-	@POST
-	@Path("/convertIFC")
-	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	@Produces(MediaType.TEXT_PLAIN)
-	public Response convert(
-			@FormDataParam("ifcFile") InputStream ifcFile) {
-		try {
-			File tempIfcFile = File.createTempFile("ifcChecker-", ".ifc");
-			tempIfcFile.deleteOnExit();
 
-			Files.copy(ifcFile, tempIfcFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-			IOUtils.closeQuietly(ifcFile);
-			StringBuilder result_string=new StringBuilder();
-			extractLBD(tempIfcFile, result_string);
-			System.out.println(result_string.toString());
-			return Response.ok(result_string.toString(), MediaType.TEXT_PLAIN).build();
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return Response.noContent().build();
-	}
 
 }
