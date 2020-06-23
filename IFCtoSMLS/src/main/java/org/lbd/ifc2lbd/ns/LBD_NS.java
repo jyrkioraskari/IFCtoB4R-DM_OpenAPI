@@ -6,17 +6,16 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 
 public class LBD_NS extends abstract_NS{
-
-	/*public static class BEXT {
-		public static final String BEXT_ns = "https://w3id.org/bot/extensions-owl#";
-		public static final Property si_unit =property(BEXT_ns,"si_unit");
-		public static final Property ifc_unit =property(BEXT_ns,"ifc_unit");
-		public static final Property unitType =property(BEXT_ns,"unitType");
+    // http://linkedbuildingdata.net/ldac2019/files/LDAC2019_Joseph_ODonovan.pdf
+	public static class GEO {
+		public static final String GEO_ns = "<http://www.opengis.net/ont/geosparql#";
+		public static final Property hasGeometry =property(GEO_ns,"hasGeometry");
+		public static final Property asWKT =property(GEO_ns,"asWKT");
 		public static void addNameSpace(Model model)
 		{
-			model.setNsPrefix("bext", BEXT_ns);
+			model.setNsPrefix("geo", GEO_ns);
 		}
-	}*/
+	}
 
 	public static class SMLS {
 		public static final String SMLS_ns = "https://w3id.org/def/smls-owl#";

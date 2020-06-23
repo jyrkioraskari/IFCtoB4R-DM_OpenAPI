@@ -27,6 +27,8 @@ import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.bimserver.plugins.deserializers.DeserializeException;
+import org.bimserver.plugins.renderengine.RenderEngineException;
 import org.lbd.ifc2lbd.geo.IFC_Geolocation;
 import org.lbd.ifc2lbd.geo.WktLiteral;
 import org.lbd.ifc2lbd.ns.IfcOWLNameSpace;
@@ -35,12 +37,13 @@ import org.lbd.ifc2lbd.ns.OPM;
 import org.lbd.ifc2lbd.utils.FileUtils;
 import org.lbd.ifc2lbd.utils.IfcOWLUtils;
 import org.lbd.ifc2lbd.utils.RDFUtils;
-import org.lbd.ifc2lbd.utils.rdfpath.InvRDFStep;
 import org.lbd.ifc2lbd.utils.rdfpath.RDFStep;
 
 import com.openifctools.guidcompressor.GuidCompressor;
 
 import be.ugent.IfcSpfReader;
+import de.rwth_aachen.dc.lbd.IFCBoundingBoxes;
+import nl.tue.ddss.bcf.BoundingBox;
 
 /*
  *  Copyright (c) 2017,2018,2019.2020 Jyrki Oraskari (Jyrki.Oraskari@gmail.f)
@@ -78,10 +81,17 @@ public class IFCtoLBDConverter_BIM4Ren {
 	private Map<String, PropertySet_SMLS> propertysets;
 
 	private Model lbd_general_output_model;
+	private IFCBoundingBoxes boundin_boxes = null;
 
 	public Model convert(String ifc_filename, String uriBase) {
 		this.propertysets = new HashMap<>();
 		this.ifcowl_product_map = new HashMap<>();
+
+		try {
+			this.boundin_boxes = new IFCBoundingBoxes(new File(ifc_filename));
+		} catch (RenderEngineException | DeserializeException | IOException e) {
+			e.printStackTrace();
+		}
 
 		ontology_model = ModelFactory.createDefaultModel();
 		ifcowl_model = readAndConvertIFC(ifc_filename, uriBase); // Before: readInOntologies(ifc_filename);
@@ -110,7 +120,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 		return lbd_general_output_model;
 	}
 
+	Set<Resource> has_geometry = new HashSet<>();
+
 	private void conversion() {
+		System.out.println("Conversion");
 		IfcOWLUtils.listSites(ifcOWL, ifcowl_model).stream().map(rn -> rn.asResource()).forEach(site -> {
 			Resource sio = createformattedURI(site, lbd_general_output_model, "Site");
 			String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL);
@@ -118,6 +131,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 			addAttrributes(lbd_general_output_model, site.asResource(), sio);
 			sio.addProperty(RDF.type, LBD_NS.BOT.site);
+
+			addBoundingBox(sio,guid_site);
 
 			IfcOWLUtils.listPropertysets(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
 				PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
@@ -138,6 +153,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 				addAttrributes(lbd_general_output_model, building, bo);
 
 				bo.addProperty(RDF.type, LBD_NS.BOT.building);
+				addBoundingBox(bo,guid_building);
 				sio.addProperty(LBD_NS.BOT.hasBuilding, bo);
 
 				IfcOWLUtils.listPropertysets(building, ifcOWL).stream().map(rn -> rn.asResource())
@@ -163,6 +179,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 					bo.addProperty(LBD_NS.BOT.hasStorey, so);
 					so.addProperty(RDF.type, LBD_NS.BOT.storey);
+					addBoundingBox(so,guid_storey);
 
 					IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource())
 							.forEach(propertyset -> {
@@ -188,6 +205,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 						so.addProperty(LBD_NS.BOT.hasSpace, spo);
 						spo.addProperty(RDF.type, LBD_NS.BOT.space);
+
+						addBoundingBox(spo,guid_space);
 						IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream()
 								.map(rn -> rn.asResource()).forEach(element -> {
 									connectElement(spo, element);
@@ -214,6 +233,15 @@ public class IFCtoLBDConverter_BIM4Ren {
 			addGeolocation2BOT();
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
+		}
+	}
+
+	private void addBoundingBox(Resource sp,String guid) {
+		BoundingBox bb = this.boundin_boxes.getBoundingBox(guid);
+		if (bb != null && has_geometry.add(sp)) {
+			Resource sp_blank = this.lbd_general_output_model.createResource();
+			sp.addProperty(LBD_NS.GEO.hasGeometry, sp_blank);
+			sp_blank.addLiteral(LBD_NS.GEO.asWKT, bb.toString());
 		}
 	}
 
@@ -356,11 +384,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 	private void addNamespaces(String uriBase) {
 		LBD_NS.SMLS.addNameSpace(lbd_general_output_model);
 		LBD_NS.UNIT.addNameSpace(lbd_general_output_model);
-		//LBD_NS.BEXT.addNameSpace(lbd_general_output_model);
-		
-		
+		LBD_NS.GEO.addNameSpace(lbd_general_output_model);
+
 		LBD_NS.BOT.addNameSpace(lbd_general_output_model);
-		
+
 		LBD_NS.Product.addNameSpace(lbd_general_output_model);
 		LBD_NS.PROPS_NS.addNameSpace(lbd_general_output_model);
 		LBD_NS.PROPS_NS.addNameSpace(lbd_general_output_model);
@@ -371,7 +398,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 		lbd_general_output_model.setNsPrefix("rdfs", RDFS.uri);
 		lbd_general_output_model.setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#");
 		lbd_general_output_model.setNsPrefix("inst", uriBase);
-		//lbd_general_output_model.setNsPrefix("geo", "http://www.opengis.net/ont/geosparql#");
+		// lbd_general_output_model.setNsPrefix("geo",
+		// "http://www.opengis.net/ont/geosparql#");
 
 	}
 
@@ -387,6 +415,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			Resource eo = createformattedURI(ifc_element, this.lbd_general_output_model, bot_type.get().getLocalName());
 			String guid = IfcOWLUtils.getGUID(ifc_element, this.ifcOWL);
 			String uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
+			addBoundingBox(eo,guid);
 			Resource lbd_property_object = this.lbd_general_output_model.createResource(eo.getURI());
 			if (predefined_type.isPresent()) {
 				Resource product = this.lbd_general_output_model
@@ -485,8 +514,9 @@ public class IFCtoLBDConverter_BIM4Ren {
 		if (!handledSttributes4resource.add(r)) // Tests if the attributes are added already
 			return;
 		String guid = IfcOWLUtils.getGUID(r, this.ifcOWL);
+		addBoundingBox(bot_r,guid);
 		String uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
-		final AttributeSet_SMLS connected_attributes = new AttributeSet_SMLS(this.uriBase, output_model,this.unitmap);
+		final AttributeSet_SMLS connected_attributes = new AttributeSet_SMLS(this.uriBase, output_model, this.unitmap);
 		r.listProperties().forEachRemaining(s -> {
 			String ps = s.getPredicate().getLocalName();
 			Resource attr = s.getObject().asResource();
@@ -499,22 +529,22 @@ public class IFCtoLBDConverter_BIM4Ren {
 					attr.listProperties(ifcOWL.getHasString()).forEachRemaining(attr_s -> {
 						if (attr_s.getObject().isLiteral()
 								&& attr_s.getObject().asLiteral().getLexicalForm().length() > 0) {
-							connected_attributes.putAnameValue(property_string, attr_s.getObject(),atype);
+							connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype);
 						}
 					});
 
 				} else if (atype.get().getLocalName().equals("IfcIdentifier")) {
 					attr.listProperties(ifcOWL.getHasString()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(),atype));
+							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
 				} else {
 					attr.listProperties(ifcOWL.getHasString()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(),atype));
+							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
 					attr.listProperties(ifcOWL.getHasInteger()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(),atype));
+							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
 					attr.listProperties(ifcOWL.getHasDouble()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(),atype));
+							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
 					attr.listProperties(ifcOWL.getHasBoolean()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(),atype));
+							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
 				}
 
 			}

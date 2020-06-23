@@ -12,10 +12,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.lbd.ifc2lbd.smls.ns.Namespace;
-
 import java.util.Set;
+
+import org.lbd.ifc2lbd.ns.Namespace;
 
 import com.buildingsmart.tech.ifcowl.vo.AttributeVO;
 import com.buildingsmart.tech.ifcowl.vo.EntityVO;

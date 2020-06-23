@@ -36,7 +36,7 @@ import org.bimserver.shared.exceptions.PublicInterfaceNotFoundException;
 import org.bimserver.shared.exceptions.ServiceException;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.lbd.ifc2lbd.IFCtoLBDConverter;
-import org.lbd.ifc2lbd.smls.IFCtoLBDConverter_BIM4Ren;
+import org.lbd.ifc2lbd.IFCtoLBDConverter_BIM4Ren;
 
 import de.rwth_aachen.dc.ifc2lbd.BimServerPasswords;
 
@@ -177,15 +177,15 @@ public class IFCtoLBD_SMLS_OpenAPI {
 	private void extractLBD_SMLS(File ifcFile, StringBuilder result_string) {
 		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
 		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset");
-
+	
 		OutputStream ttl_output = new OutputStream() {
 			private StringBuilder string = new StringBuilder();
-
+	
 			@Override
 			public void write(int b) throws IOException {
 				this.string.append((char) b);
 			}
-
+	
 			public String toString() {
 				return this.string.toString();
 			}
@@ -195,7 +195,9 @@ public class IFCtoLBD_SMLS_OpenAPI {
 		RDFDataMgr.write(ttl_output, m, RDFFormat.JSONLD_COMPACT_PRETTY);
 		result_string.append(ttl_output.toString());
 	}
-	
+
+
+
 	private  File downloadLastRelease(String projectName)
 	{
 		try {

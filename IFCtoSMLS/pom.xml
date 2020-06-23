@@ -79,6 +79,11 @@
 			<artifactId>ifcParserLib</artifactId>
 			<version>0.2</version>
 		</dependency>
+		<dependency>
+			<groupId>de.rwth-aachen.dc.lbd</groupId>
+			<artifactId>IFCtoLBDGeometry</artifactId>
+			<version>1.0</version>
+		</dependency>
 
 	</dependencies>
 

@@ -52,4 +52,5 @@ public class Namespace {
 	public static final String IFC4_ADD1="http://ifcowl.openbimstandards.org/IFC4_ADD1#";
 	public static final String IFC4_ADD2="http://ifcowl.openbimstandards.org/IFC4_ADD2#";
 
+
 }
