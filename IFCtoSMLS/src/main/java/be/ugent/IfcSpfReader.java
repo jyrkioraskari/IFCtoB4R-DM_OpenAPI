@@ -39,6 +39,7 @@ import org.apache.jena.query.ARQ;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.web.HttpOp;
 import org.apache.jena.sys.JenaSystem;
+import org.apache.jena.util.iterator.ExtendedIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -239,7 +240,8 @@ public class IfcSpfReader {
 				InputStream fis = IfcSpfReader.class.getResourceAsStream("/ent" + exp + ".ser.xml");
 				if (fis == null)
 					fis = IfcSpfReader.class.getResourceAsStream("/src/main/resources/ent" + exp + ".ser.xml");
-
+				if(fis==null)
+					System.err.println("/ent" + exp + ".ser.xml not found");
 				
 				StringBuilder xml = new StringBuilder();
 			    try (BufferedReader in = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8))) 
@@ -267,6 +269,8 @@ public class IfcSpfReader {
 				InputStream fis = IfcSpfReader.class.getResourceAsStream("/typ" + exp + ".ser.xml");
 				if (fis == null)
 					fis = IfcSpfReader.class.getResourceAsStream("/src/main/resources/typ" + exp + ".ser.xml");
+				if(fis==null)
+					System.err.println("/typ" + exp + ".ser.xml not found");
 
 				StringBuilder xml = new StringBuilder();
 			    try (BufferedReader in = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8))) 
@@ -321,8 +325,26 @@ public class IfcSpfReader {
 		in = IfcSpfReader.class.getResourceAsStream("/" + exp + ".ttl");
 		if (in == null)
 			in = IfcSpfReader.class.getResourceAsStream("/src/main/resources/" + exp + ".ttl");
+		if(in==null)
+			System.out.println("/" + exp + ".ttl does not exists.");
+		else
+			System.out.println("Found Ontology TTL file: /" + exp + ".ttl");
+			
 		om.read(in, null, "TTL");
 
+		
+		ExtendedIterator ei=om.listClasses();
+		while(ei.hasNext())
+		{
+			String uri=ei.next().toString();
+			if(uri.contains("#"))
+			{
+				ontURI= uri.substring(0, uri.lastIndexOf("#"));
+				break;
+			}
+		}
+		
+		
 		try {
 			RDFWriter conv = new RDFWriter(om, new FileInputStream(ifcFile), baseURI, ent, typ, ontURI);
 			conv.setRemoveDuplicates(removeDuplicates);

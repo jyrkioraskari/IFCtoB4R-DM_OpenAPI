@@ -2,6 +2,8 @@
 package org.lbd.ifc2lbd;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,6 +90,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 		this.propertysets = new HashMap<>();
 		this.ifcowl_product_map = new HashMap<>();
 
+		if (!uriBase.endsWith("#") && !uriBase.endsWith("/"))
+			uriBase += "#";
+		this.uriBase = uriBase;
+
 		try {
 			this.boundin_boxes = new IFCBoundingBoxes(new File(ifc_filename));
 		} catch (RenderEngineException | DeserializeException | IOException e) {
@@ -95,11 +101,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 		}
 
 		ontology_model = ModelFactory.createDefaultModel();
+		String ifc_model_file_base = ifc_filename.substring(0, ifc_filename.lastIndexOf("."));
+		
 		ifcowl_model = readAndConvertIFC(ifc_filename, uriBase); // Before: readInOntologies(ifc_filename);
-
-		if (!uriBase.endsWith("#") && !uriBase.endsWith("/"))
-			uriBase += "#";
-		this.uriBase = uriBase;
+		writeModel(ifcowl_model, ifc_model_file_base + "_ifcowl_model.ttl");
 
 		readInOntologies(ifc_filename);
 		createIfcLBDProductMapping();
@@ -118,7 +123,27 @@ public class IFCtoLBDConverter_BIM4Ren {
 		handlePropertySetData();
 
 		conversion();
+		writeModel(lbd_general_output_model, ifc_model_file_base + "_BOT_SMLS_model.ttl");
 		return lbd_general_output_model;
+	}
+
+	public static void writeModel(Model m, String target_file) {
+		System.out.println("Write to: " + target_file);
+		FileOutputStream fo = null;
+		try {
+			fo = new FileOutputStream(new File(target_file));
+			if (m == null)
+				System.err.println("Model is empty!!");
+			m.write(fo, "TTL");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} finally {
+			if (fo != null)
+				try {
+					fo.close();
+				} catch (IOException e) {
+				}
+		}
 	}
 
 	Set<Resource> has_geometry = new HashSet<>();
@@ -133,7 +158,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			addAttrributes(lbd_general_output_model, site.asResource(), sio);
 			sio.addProperty(RDF.type, LBD_NS.BOT.site);
 
-			addBoundingBox(sio,guid_site);
+			addBoundingBox(sio, guid_site);
 
 			IfcOWLUtils.listPropertysets(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
 				PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
@@ -147,6 +172,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 					System.err.println("Not an #IfcBuilding");
 					return;
 				}
+				System.out.println("Building: " + building.asResource().getURI());
+
 				Resource bo = createformattedURI(building, lbd_general_output_model, "Building");
 				String guid_building = IfcOWLUtils.getGUID(building, this.ifcOWL);
 				String uncompressed_guid_building = GuidCompressor.uncompressGuidString(guid_building);
@@ -154,7 +181,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 				addAttrributes(lbd_general_output_model, building, bo);
 
 				bo.addProperty(RDF.type, LBD_NS.BOT.building);
-				addBoundingBox(bo,guid_building);
+				addBoundingBox(bo, guid_building);
 				sio.addProperty(LBD_NS.BOT.hasBuilding, bo);
 
 				IfcOWLUtils.listPropertysets(building, ifcOWL).stream().map(rn -> rn.asResource())
@@ -180,7 +207,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 					bo.addProperty(LBD_NS.BOT.hasStorey, so);
 					so.addProperty(RDF.type, LBD_NS.BOT.storey);
-					addBoundingBox(so,guid_storey);
+					addBoundingBox(so, guid_storey);
 
 					IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource())
 							.forEach(propertyset -> {
@@ -199,6 +226,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 					IfcOWLUtils.listStoreySpaces(storey.asResource(), ifcOWL).stream().forEach(space -> {
 						if (!RDFUtils.getType(space.asResource()).get().getURI().endsWith("#IfcSpace"))
 							return;
+						System.out.println("Space: " + space.asResource().getURI());
 						Resource spo = createformattedURI(space.asResource(), lbd_general_output_model, "Space");
 						String guid_space = IfcOWLUtils.getGUID(space.asResource(), this.ifcOWL);
 						String uncompressed_guid_space = GuidCompressor.uncompressGuidString(guid_space);
@@ -207,8 +235,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 						so.addProperty(LBD_NS.BOT.hasSpace, spo);
 						spo.addProperty(RDF.type, LBD_NS.BOT.space);
 
-						addBoundingBox(spo,guid_space);
-						
+						addBoundingBox(spo, guid_space);
+
 						IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream()
 								.map(rn -> rn.asResource()).forEach(element -> {
 									connectElement(spo, element);
@@ -239,11 +267,18 @@ public class IFCtoLBDConverter_BIM4Ren {
 	}
 
 	private void addBoundingBox(Resource sp,String guid) {
+		try
+		{
 		BoundingBox bb = this.boundin_boxes.getBoundingBox(guid);
 		if (bb != null && has_geometry.add(sp)) {
 			Resource sp_blank = this.lbd_general_output_model.createResource();
 			sp.addProperty(LBD_NS.GEO.hasGeometry, sp_blank);
 			sp_blank.addLiteral(LBD_NS.GEO.asWKT, bb.toString());
+		}
+		}
+		catch (Exception e) {
+			// Just in case IFCOpenShell does not function under Tomcat 
+			e.printStackTrace();
 		}
 	}
 
@@ -396,7 +431,6 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 		OPM.addNameSpacesL3(lbd_general_output_model);
 
-		
 		lbd_general_output_model.setNsPrefix("rdf", RDF.uri);
 		lbd_general_output_model.setNsPrefix("rdfs", RDFS.uri);
 		lbd_general_output_model.setNsPrefix("owl", OWL.getURI());
@@ -419,7 +453,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			Resource eo = createformattedURI(ifc_element, this.lbd_general_output_model, bot_type.get().getLocalName());
 			String guid = IfcOWLUtils.getGUID(ifc_element, this.ifcOWL);
 			String uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
-			addBoundingBox(eo,guid);
+			addBoundingBox(eo, guid);
 			Resource lbd_property_object = this.lbd_general_output_model.createResource(eo.getURI());
 			if (predefined_type.isPresent()) {
 				Resource product = this.lbd_general_output_model
@@ -518,7 +552,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 		if (!handledSttributes4resource.add(r)) // Tests if the attributes are added already
 			return;
 		String guid = IfcOWLUtils.getGUID(r, this.ifcOWL);
-		addBoundingBox(bot_r,guid);
+		addBoundingBox(bot_r, guid);
 		String uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
 		final AttributeSet_SMLS connected_attributes = new AttributeSet_SMLS(this.uriBase, output_model, this.unitmap);
 		r.listProperties().forEachRemaining(s -> {
@@ -577,17 +611,20 @@ public class IFCtoLBDConverter_BIM4Ren {
 				if (localName.lastIndexOf('_') > 0)
 					localName = localName.substring(localName.lastIndexOf('_') + 1);
 				Resource uri = m.createResource(this.uriBase + "propertySingleValue_" + localName);
+				System.out.println("sameas 1: " + r);
 				uri.addProperty(OWL.sameAs, r);
 				return uri;
 			}
 			if (localName.toLowerCase().startsWith("ifc"))
 				localName = localName.substring(3);
 			Resource uri = m.createResource(this.uriBase + product_type.toLowerCase() + "_" + localName);
+			System.out.println("sameas 2: " + r);
 			uri.addProperty(OWL.sameAs, r);
 			return uri;
 		} else {
 			Resource guid_uri = m.createResource(
 					this.uriBase + product_type.toLowerCase() + "_" + GuidCompressor.uncompressGuidString(guid));
+			System.out.println("sameas 3: " + r);
 			guid_uri.addProperty(OWL.sameAs, r);
 			return guid_uri;
 		}
@@ -728,6 +765,12 @@ public class IFCtoLBDConverter_BIM4Ren {
 			File tempFile = File.createTempFile("ifc", ".ttl");
 			try {
 				Model m = ModelFactory.createDefaultModel();
+				m.setNsPrefix("rdf", RDF.uri);
+				m.setNsPrefix("rdfs", RDFS.uri);
+				m.setNsPrefix("owl", OWL.getURI());
+				m.setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#");
+				m.setNsPrefix("inst", uriBase);
+
 				this.ontURI = rj.convert(ifc_file, tempFile.getAbsolutePath(), uriBase);
 				RDFDataMgr.read(m, tempFile.getAbsolutePath());
 				return m;

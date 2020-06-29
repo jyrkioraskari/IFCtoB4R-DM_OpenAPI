@@ -12,7 +12,7 @@ public class Tester {
 	
 	static private void extractLBD_SMLS(File ifcFile, StringBuilder result_string) {
 		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
-		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset");
+		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset#");
 
 		OutputStream ttl_output = new OutputStream() {
 			private StringBuilder string = new StringBuilder();
@@ -34,7 +34,7 @@ public class Tester {
 	
 	
 	public static void main(String[] args) {
-		String ifcFileName = "c:\\ifc\\Duplex_A_20110505.ifc";
+		String ifcFileName = "c:\\test\\bim4ren\\BIM4Ren_DUNANT_cleaned_IFC2x3.ifc";
 		File ifcFile = new File(ifcFileName);
 		StringBuilder result_string=new StringBuilder();
 		extractLBD_SMLS(ifcFile, result_string);
