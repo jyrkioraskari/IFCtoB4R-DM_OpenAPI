@@ -1,5 +1,8 @@
 # IFCtoLBD_OpenAPI
-An OpenAPI implementation for IFCtoLBD converter.  
+Version 1.01
+
+An Restful OpenAPI implementation for IFCtoLBD converter.  
+
 
 ## Changes
 - IFCtoLBD was added. BOT+SMLS has a separate REST interface 
