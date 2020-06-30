@@ -23,23 +23,22 @@ import org.ifcopenshell.IfcOpenShellModel;
 import de.rwth_aachen.dc.OperatingSystemCopyOf_IfcGeomServer;
 import nl.tue.ddss.bcf.BoundingBox;
 
-
 public class IFCBoundingBoxes {
 
 	private final IfcOpenShellModel renderEngineModel;
 
-	public IFCBoundingBoxes(File ifcFile)
-			throws DeserializeException, IOException, RenderEngineException {
+	public IFCBoundingBoxes(File ifcFile) throws DeserializeException, IOException, RenderEngineException {
 		this.renderEngineModel = getRenderEngineModel(ifcFile);
 
 	}
 
 	public BoundingBox getBoundingBox(String guid) {
 		BoundingBox boundingBox = null;
+
 		RenderEngineInstance renderEngineInstance;
 		try {
-			renderEngineInstance = renderEngineModel.getInstanceFromGuid(guid); 
-																											
+			renderEngineInstance = renderEngineModel.getInstanceFromGuid(guid);
+
 			if (renderEngineInstance == null) {
 				return null;
 			}
@@ -64,13 +63,18 @@ public class IFCBoundingBoxes {
 		}
 		return boundingBox;
 	}
+
 	private IfcOpenShellModel getRenderEngineModel(File ifcFile) throws RenderEngineException, IOException {
 		String ifcGeomServerLocation = OperatingSystemCopyOf_IfcGeomServer.getIfcGeomServer();
+		System.out.println("ifcGeomServerLocation: "+ifcGeomServerLocation);
 		Path ifcGeomServerLocationPath = Paths.get(ifcGeomServerLocation);
 		IfcOpenShellEngine ifcOpenShellEngine = new IfcOpenShellEngine(ifcGeomServerLocationPath, false, false);
+		System.out.println("init");
 		ifcOpenShellEngine.init();
+		System.out.println("init done");
 		FileInputStream ifcFileInputStream = new FileInputStream(ifcFile);
 
+		System.out.println("ifcFile: "+ifcFile);
 		IfcOpenShellModel model = ifcOpenShellEngine.openModel(ifcFileInputStream);
 		System.out.println("IfcOpenShell opens ifc: " + ifcFile.getAbsolutePath());
 		RenderEngineSettings settings = new RenderEngineSettings();
@@ -84,9 +88,6 @@ public class IFCBoundingBoxes {
 		return model;
 	}
 
-	
-
-	
 	private void processExtends(BoundingBox boundingBox, double[] transformationMatrix, double x, double y, double z) {
 		double[] result = new double[4];
 		Matrix.multiplyMV(result, 0, transformationMatrix, 0, new double[] { x, y, z, 1 }, 0);

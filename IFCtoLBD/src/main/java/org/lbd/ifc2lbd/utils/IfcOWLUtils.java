@@ -66,7 +66,7 @@ public class IfcOWLUtils {
 
 	public static List<RDFNode> listSites(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
 		RDFStep[] path = { new InvRDFStep(RDF.type) };
-		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcSite()), path);
+		return RDFUtilsSMLS.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcSite()), path);
 	}
 
 	/**
@@ -78,7 +78,7 @@ public class IfcOWLUtils {
 	 */
 	public static List<RDFNode> listBuildings(Resource site, IfcOWLNameSpace ifcOWL) {
 		System.out.println("Site: "+site.toString());
-		List<RDFNode> buildings = RDFUtils.pathQuery(site, getNextLevelPath(ifcOWL));
+		List<RDFNode> buildings = RDFUtilsSMLS.pathQuery(site, getNextLevelPath(ifcOWL));
 		if (buildings == null || buildings.size() == 0)
 			System.err.println("No Buildings!");
 		return buildings;
@@ -94,7 +94,7 @@ public class IfcOWLUtils {
 	 */
 
 	public static List<RDFNode> listStoreys(Resource building, IfcOWLNameSpace ifcOWL) {
-		return RDFUtils.pathQuery(building, getNextLevelPath(ifcOWL));
+		return RDFUtilsSMLS.pathQuery(building, getNextLevelPath(ifcOWL));
 	}
 
 	/**
@@ -107,11 +107,11 @@ public class IfcOWLUtils {
 	public static List<RDFNode> listStoreySpaces(Resource storey, IfcOWLNameSpace ifcOWL) {
 		List<RDFNode> ret;
 
-		ret = RDFUtils.pathQuery(storey, getNextLevelPath(ifcOWL));
+		ret = RDFUtilsSMLS.pathQuery(storey, getNextLevelPath(ifcOWL));
 		RDFStep[] path2 = { new RDFStep(ifcOWL.getProperty("objectPlacement_IfcProduct")),
 				new InvRDFStep(ifcOWL.getProperty("placementRelTo_IfcLocalPlacement")),
 				new InvRDFStep(ifcOWL.getProperty("objectPlacement_IfcProduct")) };
-		ret.addAll(RDFUtils.pathQuery(storey, path2));
+		ret.addAll(RDFUtilsSMLS.pathQuery(storey, path2));
 
 		return ret;
 	}
@@ -129,11 +129,11 @@ public class IfcOWLUtils {
 
 		RDFStep[] path1 = { new InvRDFStep(ifcOWL.getProperty("relatingStructure_IfcRelContainedInSpatialStructure")),
 				new RDFStep(ifcOWL.getProperty("relatedElements_IfcRelContainedInSpatialStructure")) };
-		ret = RDFUtils.pathQuery(storey, path1);
+		ret = RDFUtilsSMLS.pathQuery(storey, path1);
 		RDFStep[] path2 = { new RDFStep(ifcOWL.getProperty("objectPlacement_IfcProduct")),
 				new InvRDFStep(ifcOWL.getProperty("placementRelTo_IfcLocalPlacement")),
 				new InvRDFStep(ifcOWL.getProperty("objectPlacement_IfcProduct")) };
-		ret.addAll(RDFUtils.pathQuery(storey, path2));
+		ret.addAll(RDFUtilsSMLS.pathQuery(storey, path2));
 		return ret;
 	}
 
@@ -151,7 +151,7 @@ public class IfcOWLUtils {
 
 		RDFStep[] path1 = { new InvRDFStep(ifcOWL.getProperty("relatingStructure_IfcRelContainedInSpatialStructure")),
 				new RDFStep(ifcOWL.getProperty("relatedElements_IfcRelContainedInSpatialStructure")) };
-		ret = RDFUtils.pathQuery(space, path1);
+		ret = RDFUtilsSMLS.pathQuery(space, path1);
 		return ret;
 	}
 
@@ -167,7 +167,7 @@ public class IfcOWLUtils {
 
 		RDFStep[] path1 = { new InvRDFStep(ifcOWL.getProperty("relatingSpace_IfcRelSpaceBoundary")),
 				new RDFStep(ifcOWL.getProperty("relatedBuildingElement_IfcRelSpaceBoundary")) };
-		ret = RDFUtils.pathQuery(space, path1);
+		ret = RDFUtilsSMLS.pathQuery(space, path1);
 		return ret;
 	}
 
@@ -183,14 +183,14 @@ public class IfcOWLUtils {
 				new RDFStep(ifcOWL.getProperty("relatedOpeningElement_IfcRelVoidsElement")),
 				new InvRDFStep(ifcOWL.getProperty("relatingOpeningElement_IfcRelFillsElement")),
 				new RDFStep(ifcOWL.getProperty("relatedBuildingElement_IfcRelFillsElement")) };
-		ret = RDFUtils.pathQuery(element, path1);
+		ret = RDFUtilsSMLS.pathQuery(element, path1);
 
 		RDFStep[] path2 = { new InvRDFStep(ifcOWL.getProperty("relatingBuildingElement_IfcRelVoidsElement")),
 				new RDFStep(ifcOWL.getProperty("relatedOpeningElement_IfcRelVoidsElement")),
 				new RDFStep(ifcOWL.getProperty("objectPlacement_IfcProduct")),
 				new InvRDFStep(ifcOWL.getProperty("placementRelTo_IfcLocalPlacement")),
 				new InvRDFStep(ifcOWL.getProperty("objectPlacement_IfcProduct")) };
-		ret.addAll(RDFUtils.pathQuery(element, path2));
+		ret.addAll(RDFUtilsSMLS.pathQuery(element, path2));
 
 		return ret;
 	}
@@ -210,7 +210,7 @@ public class IfcOWLUtils {
 
 		RDFStep[] path1 = { new InvRDFStep(ifcOWL.getProperty("relatingObject_IfcRelDecomposes")),
 				new RDFStep(ifcOWL.getProperty("relatedObjects_IfcRelDecomposes")) };
-		ret = RDFUtils.pathQuery(element, path1);
+		ret = RDFUtilsSMLS.pathQuery(element, path1);
 		return ret;
 	}
 
@@ -278,7 +278,7 @@ public class IfcOWLUtils {
 	 * @return the list of the matching RDF nodes.
 	 */
 	public static List<RDFNode> listPropertysets(Resource resource, IfcOWLNameSpace ifcOWL) {
-		return RDFUtils.pathQuery(resource, getPropertySetPath(ifcOWL));
+		return RDFUtilsSMLS.pathQuery(resource, getPropertySetPath(ifcOWL));
 	}
 
 	/**
@@ -291,7 +291,7 @@ public class IfcOWLUtils {
 	 */
 	public static List<RDFNode> listPropertysets(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
 		RDFStep[] path = { new InvRDFStep(RDF.type) };
-		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcPropertySet()), path);
+		return RDFUtilsSMLS.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcPropertySet()), path);
 	}
 
 	public static Optional<String> getPredefinedData(RDFNode rn) {

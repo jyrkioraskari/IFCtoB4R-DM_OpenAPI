@@ -20,8 +20,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.lbd.ifc2lbd.ns.Namespace;
-
 import com.buildingsmart.tech.ifcowl.vo.AttributeVO;
 import com.buildingsmart.tech.ifcowl.vo.EntityVO;
 import com.buildingsmart.tech.ifcowl.vo.InverseVO;
@@ -29,6 +27,9 @@ import com.buildingsmart.tech.ifcowl.vo.NamedIndividualVO;
 import com.buildingsmart.tech.ifcowl.vo.PrimaryTypeVO;
 import com.buildingsmart.tech.ifcowl.vo.PropertyVO;
 import com.buildingsmart.tech.ifcowl.vo.TypeVO;
+
+import de.rwth_aachen.dc.lbd_smls.ns.Namespace;
+
 
 /*
  * ExpressReader reads EXPRESS file11 specification of the IFC files and creates 
@@ -339,28 +340,28 @@ public class ExpressReader {
 					if(origprop!=null){
 						PropertyVO originv = inverseOfInv.getInverseProperty();
 						if(originv!=null){
-							//System.out.println("removing property 2 from property list: " + originv.getName());
+							System.out.println("removing property 2 from property list: " + originv.getName());
 							if(getProperties().remove(originv.getName())==null){
-								//System.out.println("could not remove property 2 from list: " + originv.getName());
+								System.out.println("could not remove property 2 from list: " + originv.getName());
 								getProperties().remove(originv.getOriginalName());
 							}
-							//System.out.println("removing property 2 from property list: " + origprop.getName());
+							System.out.println("removing property 2 from property list: " + origprop.getName());
 							originv.setInverseProp(null);
-							//System.out.println("removed inverses of property: " + originv.getName());
+							System.out.println("removed inverses of property: " + originv.getName());
 						}	
 						else{
-							//System.out.println("removing property 3: " + origprop.getName());	
+							System.out.println("removing property 3: " + origprop.getName());	
 							origprop.setInverseProp(null);
 						}
 
-						//System.out.println("removing property 4: " + prop.getName());	
+						System.out.println("removing property 4: " + prop.getName());	
 						if(getProperties().remove(prop.getName())==null)
-							//System.out.println("could not remove property 4 from list: " + prop.getName());
+							System.out.println("could not remove property 4 from list: " + prop.getName());
 						inverseOfInv.setInverseProp(null);
-						//System.out.println("removed inverses of property: " + inverseOfInv.getName());
+						System.out.println("removed inverses of property: " + inverseOfInv.getName());
 					}	
 					else{
-						//System.out.println("removing property 5: " + prop.getName());
+						System.out.println("removing property 5: " + prop.getName());
 						getProperties().remove(prop.getName());
 					}
 				}
@@ -390,11 +391,11 @@ public class ExpressReader {
 						PrimaryTypeVO ptype = PrimaryTypeVO
 								.getPrimaryTypeVO(entString);
 						if (ptype != null){
-							//System.out.println("Warning: PTYPE is part of select : " + parent.getName());
+							System.out.println("Warning: PTYPE is part of select : " + parent.getName());
 							ptype.addParentSelectType(parent);
 						}
 						else{
-							//System.out.println("Warning: Something is part of select that is not a PType, Entity, or Type: " + parent.getName());
+							System.out.println("Warning: Something is part of select that is not a PType, Entity, or Type: " + parent.getName());
 						}
 					}
 				}
