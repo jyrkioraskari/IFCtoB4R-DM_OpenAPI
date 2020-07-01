@@ -6,14 +6,13 @@ import java.io.OutputStream;
 
 import org.apache.jena.rdf.model.Model;
 
-import de.rwth_aachen.dc.lbd_smls.IFCtoLBDConverter_BIM4Ren;
+import de.rwth_aachen.dc.lbd_smls.IfcOWLtoLBDConverter_BIM4Ren;
 
-public class Tester {
+public class  Sample_IfcOWLtoSMLS{
 	
-	
-	static private void extractLBD_SMLS(File ifcFile, StringBuilder result_string) {
-		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
-		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset#");
+	static private void extractIfcOWLtoBD_SMLS(File ifcOwlFile, StringBuilder result_string) {
+		IfcOWLtoLBDConverter_BIM4Ren lbdconverter = new IfcOWLtoLBDConverter_BIM4Ren();
+		Model m = lbdconverter.convert(ifcOwlFile.getAbsolutePath());
 
 		OutputStream ttl_output = new OutputStream() {
 			private StringBuilder string = new StringBuilder();
@@ -35,10 +34,10 @@ public class Tester {
 	
 	
 	public static void main(String[] args) {
-		String ifcFileName = "c:\\test\\bim4ren\\BIM4Ren_DUNANT_cleaned_IFC2x3.ifc";
-		File ifcFile = new File(ifcFileName);
+		String ifcFileName = "c:\\ifc2\\Barcelona_Pavilion.ttl";
+		File ifcOwlFile = new File(ifcFileName);
 		StringBuilder result_string=new StringBuilder();
-		extractLBD_SMLS(ifcFile, result_string);
+		extractIfcOWLtoBD_SMLS(ifcOwlFile, result_string);
 		System.out.println(result_string.toString());
 	}
 }

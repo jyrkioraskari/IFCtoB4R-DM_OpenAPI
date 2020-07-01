@@ -41,6 +41,7 @@ import org.lbd.ifc2lbd.IfcOWLtoLBDConverter;
 
 import de.rwth_aachen.dc.ifc2lbd.BimServerPasswords;
 import de.rwth_aachen.dc.lbd_smls.IFCtoLBDConverter_BIM4Ren;
+import de.rwth_aachen.dc.lbd_smls.IfcOWLtoLBDConverter_BIM4Ren;
 
 /*
  * Jyrki Oraskari, 2020
@@ -49,30 +50,30 @@ import de.rwth_aachen.dc.lbd_smls.IFCtoLBDConverter_BIM4Ren;
 @Path("/")
 public class IFCtoLBD_OpenAPI {
 
-	/**
-	 * Converts a BIMServer project into RDF (LBD_SMLS) 
-	 * NOTE: A running BIMServer installation is needed for this to function.
-	 * ---------------------------------------------------------------------
-	 * @param project_name BIMServer project name
-	 * @return Returnd RDF output. Formats are:  JSON-LD,  RDF/XML, and TTL
-	 */
-	@POST
-	@Path("/convertBIMProject2SMLS/{project_name}")
-	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	public Response convert(@PathParam("id") String project_name) {
-		try {
-			File ifFile = downloadLastRelease(project_name);
-
-			StringBuilder result_string = new StringBuilder();
-			extractLBD_SMLS(ifFile, result_string, RDFFormat.JSONLD_COMPACT_PRETTY);
-			return Response.ok(result_string.toString(), MediaType.TEXT_PLAIN).build();
-
-		} catch (Exception e) {
-			//e.printStackTrace();
-		}
-
-		return Response.noContent().build();
-	}
+//	/**
+//	 * Converts a BIMServer project into RDF (LBD_SMLS) 
+//	 * NOTE: A running BIMServer installation is needed for this to function.
+//	 * ---------------------------------------------------------------------
+//	 * @param project_name BIMServer project name
+//	 * @return Returnd RDF output. Formats are:  JSON-LD,  RDF/XML, and TTL
+//	 */
+//	@POST
+//	@Path("/convertBIMProject2SMLS/{project_name}")
+//	@Produces(MediaType.APPLICATION_OCTET_STREAM)
+//	public Response convert(@PathParam("id") String project_name) {
+//		try {
+//			File ifFile = downloadLastRelease(project_name);
+//
+//			StringBuilder result_string = new StringBuilder();
+//			extractLBD_SMLS(ifFile, result_string, RDFFormat.JSONLD_COMPACT_PRETTY);
+//			return Response.ok(result_string.toString(), MediaType.TEXT_PLAIN).build();
+//
+//		} catch (Exception e) {
+//			//e.printStackTrace();
+//		}
+//
+//		return Response.noContent().build();
+//	}
 
 	/**
 	 * Converts an IFC file into into the Linked Building Data  (BOT
@@ -158,9 +159,10 @@ public class IFCtoLBD_OpenAPI {
 
 	
 	
+
 	/**
 	 * Converts an IFC file into into the Linked Building Data RDF (BOT+SMLS)
-	 * 
+	 *  + Geometry:  Bounding Boxes
 	 * @param ifcFile an IFC file
 	 * @return JSONLD formatted output
 	 */
@@ -168,7 +170,7 @@ public class IFCtoLBD_OpenAPI {
 	@Path("/convertIFCtoSMLS")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces({"text/turtle", "application/ld+json", "application/rdf+xml"})
-	public Response convertIFCtoSMLS_JSON_LD(@HeaderParam(HttpHeaders.ACCEPT) String accept_type,
+	public Response convertIFCtoSMLS(@HeaderParam(HttpHeaders.ACCEPT) String accept_type,
 			@FormDataParam("ifcFile") InputStream ifcFile) {
 		try {
 			File tempIfcFile = File.createTempFile("ifc2lbd-", ".ifc");
@@ -178,17 +180,17 @@ public class IFCtoLBD_OpenAPI {
 			IOUtils.closeQuietly(ifcFile);
 			if (accept_type.equals("application/ld+json")) {
 				StringBuilder result_string = new StringBuilder();
-				extractLBD_SMLS(tempIfcFile, result_string, RDFFormat.JSONLD_COMPACT_PRETTY);
+				extractIFCtoLBD_SMLS(tempIfcFile, result_string, RDFFormat.JSONLD_COMPACT_PRETTY);
 				System.out.println(result_string.toString());
 				return Response.ok(result_string.toString(), "application/ld+json").build();
 			} else if (accept_type.equals("application/rdf+xml")) {
 				StringBuilder result_string = new StringBuilder();
-				extractLBD_SMLS(tempIfcFile, result_string, RDFFormat.RDFXML);
+				extractIFCtoLBD_SMLS(tempIfcFile, result_string, RDFFormat.RDFXML);
 				System.out.println(result_string.toString());
 				return Response.ok(result_string.toString(), "application/rdf+xml").build();
 			} else {
 				StringBuilder result_string = new StringBuilder();
-				extractLBD_SMLS(tempIfcFile, result_string, RDFFormat.TURTLE_PRETTY);
+				extractIFCtoLBD_SMLS(tempIfcFile, result_string, RDFFormat.TURTLE_PRETTY);
 				System.out.println(result_string.toString());
 				return Response.ok(result_string.toString(), "text/turtle").build();
 
@@ -200,6 +202,50 @@ public class IFCtoLBD_OpenAPI {
 
 		return Response.noContent().build();
 	}
+	
+	
+	/**
+	 * Converts an IfcOWL file into into the Linked Building Data RDF ((BOT+SMLS)
+	 * 
+	 * @param ifcOWLFile an IfcOWL TTL formatted file
+	 * @return Returnd RDF output. Formats are:  JSON-LD,  RDF/XML, and TTL
+	 */
+	@POST
+	@Path("/convertIfcOWLtoSMLS")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces({"text/turtle", "application/ld+json", "application/rdf+xml"})
+	public Response convertIfcOWLtoSMLS(@HeaderParam(HttpHeaders.ACCEPT) String accept_type, @FormDataParam("ifcOWLFile") InputStream ifcOWLFile) {
+		try {
+			File tempIfcOWLFile = File.createTempFile("ifc2lbd-", ".ttl");
+			tempIfcOWLFile.deleteOnExit();
+
+			Files.copy(ifcOWLFile, tempIfcOWLFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			IOUtils.closeQuietly(ifcOWLFile);
+			
+			if (accept_type.equals("application/ld+json")) {
+				StringBuilder result_string = new StringBuilder();
+				extractIfcOWLtoBD_SMLS(tempIfcOWLFile, result_string, RDFFormat.JSONLD_COMPACT_PRETTY);
+				return Response.ok(result_string.toString(), "application/ld+json").build();
+			} else if (accept_type.equals("application/rdf+xml")) {
+				StringBuilder result_string = new StringBuilder();
+				extractIfcOWLtoBD_SMLS(tempIfcOWLFile, result_string, RDFFormat.RDFXML);
+				return Response.ok(result_string.toString(), "application/rdf+xml").build();
+			} else {
+				StringBuilder result_string = new StringBuilder();
+				extractIfcOWLtoBD_SMLS(tempIfcOWLFile, result_string, RDFFormat.TURTLE_PRETTY);
+				return Response.ok(result_string.toString(), "text/turtle").build();
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.noContent().build();
+	}
+
+	
+
 
 	private void extractIFCtoLBD(File ifcFile, StringBuilder result_string, RDFFormat rdfformat) {
 		IFCtoLBDConverter lbdconverter = new IFCtoLBDConverter("https://dot.dc.rwth-aachen.de/IFCtoLBDset", false, 3);
@@ -241,7 +287,7 @@ public class IFCtoLBD_OpenAPI {
 		RDFDataMgr.write(ttl_output, m, rdfformat);
 		result_string.append(ttl_output.toString());
 	}
-	private void extractLBD_SMLS(File ifcFile, StringBuilder result_string, RDFFormat rdfformat) {
+	private void extractIFCtoLBD_SMLS(File ifcFile, StringBuilder result_string, RDFFormat rdfformat) {
 		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
 		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset");
 
@@ -261,6 +307,27 @@ public class IFCtoLBD_OpenAPI {
 		result_string.append(ttl_output.toString());
 	}
 
+	
+	private void extractIfcOWLtoBD_SMLS(File ifcOwlFile, StringBuilder result_string, RDFFormat rdfformat) {
+		IfcOWLtoLBDConverter_BIM4Ren lbdconverter = new IfcOWLtoLBDConverter_BIM4Ren();
+		Model m = lbdconverter.convert(ifcOwlFile.getAbsolutePath());
+
+		OutputStream ttl_output = new OutputStream() {
+			private StringBuilder string = new StringBuilder();
+
+			@Override
+			public void write(int b) throws IOException {
+				this.string.append((char) b);
+			}
+
+			public String toString() {
+				return this.string.toString();
+			}
+		};
+		RDFDataMgr.write(ttl_output, m, rdfformat);
+		result_string.append(ttl_output.toString());
+	}
+	
 	private File downloadLastRelease(String projectName) {
 		try {
 			JsonBimServerClientFactory factory = new JsonBimServerClientFactory("http://localhost:8080");

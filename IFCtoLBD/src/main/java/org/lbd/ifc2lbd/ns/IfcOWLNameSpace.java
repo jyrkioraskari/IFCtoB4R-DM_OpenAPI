@@ -1,5 +1,6 @@
 /*
- * Copyright 2016 Pieter Pauwels, Ghent University; Jyrki Oraskari, Aalto University; Lewis John McGibbney, Apache
+ * Copyright 2016  Pieter Pauwels, Ghent University;Lewis John McGibbney, Apache
+ * 2016, 2020, Jyrki Oraskari Aalto University, RWTH-Aachen 
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,14 +38,29 @@ public class IfcOWLNameSpace extends abstract_NS {
 	private final Property description;
 	private final Property name;
 	private final Property longName;
-	
 	private final Property guid;
 
+	private final Property units_IfcUnitAssignment;
+	private final Property unitType_IfcNamedUnit;
+	private final Property name_IfcSIUnit;
+	
+	
 	private final String IfcBuilding;
 	private final String IfcSite;
 	private final String IfcSpace;
 	private final String IfcProduct;
 	private final String IfcPropertySet;
+	private final String IfcUnitAssignment;
+	private final String IfcSIUnit;
+	private final String LENGTHUNIT;
+	private final String AREAUNIT;
+	private final String VOLUMEUNIT;
+	private final String PLANEANGLEUNIT;
+	
+	private final String METRE;
+	private final String SQUARE_METRE;
+	private final String CUBIC_METRE;
+	private final String RADIAN;
 	
 	private final String ifcURI;
 	
@@ -73,6 +89,7 @@ public class IfcOWLNameSpace extends abstract_NS {
 		description = property(ifcURI, "description_IfcRoot");
 		name = property(ifcURI, "name_IfcRoot");
 		longName = property(ifcURI, "longName_IfcSpatialStructureElement");
+		units_IfcUnitAssignment=property(ifcURI, "units_IfcUnitAssignment");
 		
 		guid = property(ifcURI, "globalId_IfcRoot");
 
@@ -81,6 +98,20 @@ public class IfcOWLNameSpace extends abstract_NS {
 		IfcSpace = ifcURI + "IfcSpace";
 		IfcProduct = ifcURI + "IfcProduct";
 		IfcPropertySet = ifcURI + "IfcPropertySet";
+		IfcUnitAssignment = ifcURI + "IfcUnitAssignment";
+		IfcSIUnit = ifcURI + "IfcSIUnit";
+		
+		unitType_IfcNamedUnit = property(ifcURI, "unitType_IfcNamedUnit");
+		name_IfcSIUnit = property(ifcURI, "name_IfcSIUnit");
+		LENGTHUNIT= ifcURI + "LENGTHUNIT";
+		AREAUNIT= ifcURI + "AREAUNIT";
+		VOLUMEUNIT= ifcURI + "VOLUMEUNIT";
+		PLANEANGLEUNIT= ifcURI + "PLANEANGLEUNIT";
+		
+		METRE= ifcURI + "METRE";
+		SQUARE_METRE= ifcURI + "SQUARE_METRE";
+		CUBIC_METRE= ifcURI + "CUBIC_METRE";
+		RADIAN= ifcURI + "RADIAN";
 	}
 	
 	
@@ -135,6 +166,19 @@ public class IfcOWLNameSpace extends abstract_NS {
 	public Property getGuid() {
 		return guid;
 	}
+
+	public Property getUnits_IfcUnitAssignment() {
+		return units_IfcUnitAssignment;
+	}
+	public Property getUnitType_IfcNamedUnit() {
+		return unitType_IfcNamedUnit;
+	}
+
+	public Property getName_IfcSIUnit() {
+		return name_IfcSIUnit;
+	}
+
+	
 	public String getIfcBuilding() {
 		return IfcBuilding;
 	}
@@ -147,9 +191,56 @@ public class IfcOWLNameSpace extends abstract_NS {
 	public String getIfcProduct() {
 		return IfcProduct;
 	}
+
+	public String getIfcUnitAssignment() {
+		return IfcUnitAssignment;
+	}
+	public String getIfcSIUnit() {
+		return IfcSIUnit;
+	}
+	
+
+
+
+	public String getLENGTHUNIT() {
+		return LENGTHUNIT;
+	}
+
+	public String getAREAUNIT() {
+		return AREAUNIT;
+	}
+
+	public String getVOLUMEUNIT() {
+		return VOLUMEUNIT;
+	}
+
+	public String getPLANEANGLEUNIT() {
+		return PLANEANGLEUNIT;
+	}
+
+
+	public String getMETRE() {
+		return METRE;
+	}
+	
+	public String getSQUARE_METRE() {
+		return SQUARE_METRE;
+	}
+	
+	public String getCUBIC_METRE() {
+		return CUBIC_METRE;
+	}
+
+	public String getRADIAN() {
+		return RADIAN;
+	}
+
+
 	public String getIfcPropertySet() {
 		return IfcPropertySet;
 	}
+	
+	
 	static public Property getHasString() {
 		return hasString;
 	}

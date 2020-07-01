@@ -384,6 +384,32 @@ public class IfcOWLUtils {
 			}
 		}
 	}
+	
+	/**
+	 * Reads in a Turtle formatted ontology file into a Jena RDF store
+	 * 
+	 * @param exp The Express schema name
+	 * @param model    Am Apache Jene model where the ontology triples are added.
+	 */
+	public static void readIfcOWLOntologyWhenSchemaKnown(String exp, Model model,String uri) {
+		InputStream in = null;
+		try {
+			in = IfcSpfReader.class.getResourceAsStream("/" + exp + ".ttl");
+
+			if (in == null)
+				in = IfcSpfReader.class.getResourceAsStream("/resources/" + exp + ".ttl");
+			System.out.println("in "+in+" exp: "+exp);
+			model.read(in, uri, "TTL");
+		} finally {
+			try {
+				in.close();
+			} catch (Exception e1) {
+				e1.printStackTrace();
+			}
+		}
+	}
+	
+
 
 	/**
 	 * 
