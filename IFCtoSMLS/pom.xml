@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.rwth-aachen.dc.ifctolbd</groupId>
 	<artifactId>IFCtoSMLS</artifactId>
-	<version>1.1</version>
+	<version>1.02</version>
 
 	<organization>
 		<name>RWTH-Aachen DC</name>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>de.rwth-aachen.dc.lbd</groupId>
 			<artifactId>IFCtoLBDGeometry</artifactId>
-			<version>1.0</version>
+			<version>1.02</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.thoughtworks.xstream/xstream -->
 		<dependency>
