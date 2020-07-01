@@ -3,6 +3,8 @@ Version 1.01
 
 An Restful OpenAPI implementation for IFCtoLBD converter.  
 
+A test installation:
+http://lbd.arch.rwth-aachen.de/IFCtoLBD_OpenAPI/apidocs/
 
 ## Changes
 - IFCtoLBD was added. BOT+SMLS has a separate REST interface 
