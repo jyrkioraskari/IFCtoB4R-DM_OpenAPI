@@ -18,6 +18,7 @@ public class abstract_NS {
 		return ResourceFactory.createProperty(base_uri, tag);
 	}
 	protected static final Resource resource(String base_uri,String name) {
+		
 		return ResourceFactory.createResource(base_uri+name);
 	}
 

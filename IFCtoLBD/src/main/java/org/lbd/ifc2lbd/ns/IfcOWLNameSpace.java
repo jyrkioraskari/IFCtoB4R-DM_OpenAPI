@@ -50,33 +50,37 @@ public class IfcOWLNameSpace extends abstract_NS {
 	
 	public IfcOWLNameSpace(String ifcURI)
 	{
+		if(ifcURI.endsWith("#"))
+		   ifcURI=ifcURI;
+		else
+			ifcURI=ifcURI+"#";
 		this.ifcURI=ifcURI;
-		relatingObject_IfcRelDecomposes = property(ifcURI, "#relatingObject_IfcRelDecomposes");
-		relatedObjects_IfcRelDecomposes = property(ifcURI, "#relatedObjects_IfcRelDecomposes");
+		relatingObject_IfcRelDecomposes = property(ifcURI, "relatingObject_IfcRelDecomposes");
+		relatedObjects_IfcRelDecomposes = property(ifcURI, "relatedObjects_IfcRelDecomposes");
 		relatingStructure_IfcRelContainedInSpatialStructure = property(ifcURI,
-				"#relatingStructure_IfcRelContainedInSpatialStructure");
+				"relatingStructure_IfcRelContainedInSpatialStructure");
 		relatedElements_IfcRelContainedInSpatialStructure = property(ifcURI,
-				"#relatedElements_IfcRelContainedInSpatialStructure");
+				"relatedElements_IfcRelContainedInSpatialStructure");
 		
-		relatedObjects_IfcRelDefines = property(ifcURI, "#relatedObjects_IfcRelDefines");
-		relatingPropertyDefinition_IfcRelDefinesByProperties =property(ifcURI, "#relatingPropertyDefinition_IfcRelDefinesByProperties");
+		relatedObjects_IfcRelDefines = property(ifcURI, "relatedObjects_IfcRelDefines");
+		relatingPropertyDefinition_IfcRelDefinesByProperties =property(ifcURI, "relatingPropertyDefinition_IfcRelDefinesByProperties");
 		
-		name_IfcRoot  =property(ifcURI, "#name_IfcRoot");
-		name_IfcProperty  =property(ifcURI, "#name_IfcProperty");
-		hasProperties_IfcPropertySet =property(ifcURI, "#hasProperties_IfcPropertySet");
-		nominalValue_IfcPropertySingleValue =property(ifcURI, "#nominalValue_IfcPropertySingleValue");
+		name_IfcRoot  =property(ifcURI, "name_IfcRoot");
+		name_IfcProperty  =property(ifcURI, "name_IfcProperty");
+		hasProperties_IfcPropertySet =property(ifcURI, "hasProperties_IfcPropertySet");
+		nominalValue_IfcPropertySingleValue =property(ifcURI, "nominalValue_IfcPropertySingleValue");
 		
-		description = property(ifcURI, "#description_IfcRoot");
-		name = property(ifcURI, "#name_IfcRoot");
-		longName = property(ifcURI, "#longName_IfcSpatialStructureElement");
+		description = property(ifcURI, "description_IfcRoot");
+		name = property(ifcURI, "name_IfcRoot");
+		longName = property(ifcURI, "longName_IfcSpatialStructureElement");
 		
-		guid = property(ifcURI, "#globalId_IfcRoot");
+		guid = property(ifcURI, "globalId_IfcRoot");
 
-		IfcBuilding = ifcURI + "#IfcBuilding";
-		IfcSite = ifcURI + "#IfcSite";
-		IfcSpace = ifcURI + "#IfcSpace";
-		IfcProduct = ifcURI + "#IfcProduct";
-		IfcPropertySet = ifcURI + "#IfcPropertySet";
+		IfcBuilding = ifcURI + "IfcBuilding";
+		IfcSite = ifcURI + "IfcSite";
+		IfcSpace = ifcURI + "IfcSpace";
+		IfcProduct = ifcURI + "IfcProduct";
+		IfcPropertySet = ifcURI + "IfcPropertySet";
 	}
 	
 	

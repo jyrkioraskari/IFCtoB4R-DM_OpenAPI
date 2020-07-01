@@ -1,8 +1,6 @@
 
 package org.lbd.ifc2lbd;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,6 +15,7 @@ import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.NsIterator;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
@@ -38,7 +37,6 @@ import org.lbd.ifc2lbd.utils.IfcOWLUtils;
 import org.lbd.ifc2lbd.utils.RDFUtilsSMLS;
 import org.lbd.ifc2lbd.utils.rdfpath.RDFStep;
 
-import com.buildingsmart.tech.ifcowl.IfcSpfReader;
 import com.google.common.eventbus.EventBus;
 import com.openifctools.guidcompressor.GuidCompressor;
 
@@ -58,32 +56,14 @@ import com.openifctools.guidcompressor.GuidCompressor;
  * limitations under the License.
  */
 
-// The Class diagram source code:
-/*
- * @startuml doc-graphs/IFCtoLBDConverter_class_diagram.png class
- * IFCtoLBDConverter { Model ifcowl_model String uriBase IfcOWLNameSpace ifcOWL
- * Map<String, List<Resource>> ifcowl_product_map
- * 
- * Model readAndConvertIFC(String ifc_file, String uriBase) void
- * readInOntologies(String ifc_file) void createIfcLBDProductMapping() void
- * addNamespaces(String uriBase, int props_level, boolean hasBuildingElements,
- * boolean hasBuildingProperties) void handlePropertySetData(int props_level,
- * boolean hasPropertiesBlankNodes) void conversion(String target_file, boolean
- * hasBuildingElements, boolean hasSeparateBuildingElementsModel, boolean
- * hasBuildingProperties, boolean hasSeparatePropertiesModel, boolean
- * hasGeolocation) } IFCtoLBDConverter - IfcOWLUtils: use > IFCtoLBDConverter -
- * RDFUtils: use > IFCtoLBDConverter - FileUtils: use > IFCtoLBDConverter o--
- * PropertySet IfcOWLUtils .. RDFStep IfcOWLUtils .. InvRDFStep
- * 
- * @enduml
- */
 
-public class IFCtoLBDConverter {
+
+public class IfcOWLtoLBDConverter {
 	private final EventBus eventBus = EventBusService.getEventBus();
 	private Model ifcowl_model;
 	private Model ontology_model = null;
 	private Map<String, List<Resource>> ifcowl_product_map = new HashMap<>();
-	private final String uriBase;
+	private Optional<String> uriBase=Optional.empty();
 
 	private Optional<String> ontURI = Optional.empty();
 	private IfcOWLNameSpace ifcOWL;
@@ -97,74 +77,36 @@ public class IFCtoLBDConverter {
 	private final Model lbd_product_output_model;
 	private final Model lbd_property_output_model;
 
+
 	/**
 	 * The construction method for the converter process. This does the whole
 	 * process.
 	 * 
-	 * @param ifc_filename                     The absolute path for the IFC file
-	 *                                         that will be converted
-	 * @param uriBase                          The URI base for all the elemenents
-	 *                                         that will be created
-	 * @param target_file                      The main file name for the output. If
-	 *                                         there are many, they will be sharing
-	 *                                         the same beginning
-	 * @param props_level                      The levels described in
-	 *                                         https://github.com/w3c-lbd-cg/lbd/blob/gh-pages/presentations/props/presentation_LBDcall_20180312_final.pdf
-	 * @param hasBuildingElements              The Building Elements will be created
-	 *                                         in the output
-	 * @param hasSeparateBuildingElementsModel The Building elements will have a
-	 *                                         separate file
-	 * @param hasBuildingProperties            The properties will ne added into the
-	 *                                         output
-	 * @param hasSeparatePropertiesModel       The properties will be written in a
-	 *                                         separate file
-	 * @param hasPropertiesBlankNodes          Blank nodes are used
-	 * @param hasGeolocation                   Geolocation, i.e., the latitude and
-	 *                                         longitude are added.
+	 * @param hasPropertiesBlankNodes Blank nodes are used
+	 * 
+	 * @param props_level             The levels described in
+	 *                                https://github.com/w3c-lbd-cg/lbd/blob/gh-pages/presentations/props/presentation_LBDcall_20180312_final.pdf
+	 *                                longitude are added.
+	 * 
 	 */
-	public IFCtoLBDConverter(String ifc_filename, String uriBase, String target_file, int props_level,
-			boolean hasBuildingElements, boolean hasSeparateBuildingElementsModel, boolean hasBuildingProperties,
-			boolean hasSeparatePropertiesModel, boolean hasPropertiesBlankNodes, boolean hasGeolocation) {
-		this.props_level = props_level;
+	public IfcOWLtoLBDConverter(boolean hasPropertiesBlankNodes, Integer... props_level) {
+		if (props_level.length > 0)
+			this.props_level = props_level[0];
+		else
+			this.props_level = 1;
 		this.hasPropertiesBlankNodes = hasPropertiesBlankNodes;
 
-		if (!uriBase.endsWith("#") && !uriBase.endsWith("/"))
-			uriBase += "#";
-		this.uriBase = uriBase;
 		System.out.println("Conversion starts");
 		ontology_model = ModelFactory.createDefaultModel();
 		eventBus.post(new SystemStatusEvent("IFCtoRDF conversion"));
-		ifcowl_model = readAndConvertIFC(ifc_filename, uriBase); // Before: readInOntologies(ifc_filename);
-
-		eventBus.post(new SystemStatusEvent("Reading in ontologies"));
-
-		readInOntologies(ifc_filename);
-		createIfcLBDProductMapping();
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
 		this.lbd_product_output_model = ModelFactory.createDefaultModel();
 		this.lbd_property_output_model = ModelFactory.createDefaultModel();
 
-		addNamespaces(uriBase, props_level, hasBuildingElements, hasBuildingProperties);
-
-		eventBus.post(new SystemStatusEvent("IFC->LBD"));
-		if (this.ontURI.isPresent())
-			ifcOWL = new IfcOWLNameSpace(this.ontURI.get());
-		else {
-			System.out.println("No ifcOWL ontology available.");
-			eventBus.post(new SystemStatusEvent("No ifcOWL ontology available."));
-			return;
-		}
-
-		if (hasBuildingProperties) {
-			handlePropertySetData(props_level, hasPropertiesBlankNodes);
-		}
-
-		conversion(target_file, hasBuildingElements, hasSeparateBuildingElementsModel, hasBuildingProperties,
-				hasSeparatePropertiesModel, hasGeolocation);
-
 	}
-
+	
+	
 	/**
 	 * The construction method for the converter process. This does the whole
 	 * process.
@@ -178,7 +120,7 @@ public class IFCtoLBDConverter {
 	 *                                longitude are added.
 	 * 
 	 */
-	public IFCtoLBDConverter(String uriBase, boolean hasPropertiesBlankNodes, Integer... props_level) {
+	public IfcOWLtoLBDConverter(String uriBase, boolean hasPropertiesBlankNodes, Integer... props_level) {
 		if (props_level.length > 0)
 			this.props_level = props_level[0];
 		else
@@ -187,7 +129,7 @@ public class IFCtoLBDConverter {
 
 		if (!uriBase.endsWith("#") && !uriBase.endsWith("/"))
 			uriBase += "#";
-		this.uriBase = uriBase;
+		this.uriBase = Optional.of(uriBase);
 		System.out.println("Conversion starts");
 		ontology_model = ModelFactory.createDefaultModel();
 		eventBus.post(new SystemStatusEvent("IFCtoRDF conversion"));
@@ -199,9 +141,10 @@ public class IFCtoLBDConverter {
 	}
 
 	/**
-	 * Convert an IFC STEP file into LBD
+	 * Convert an IFC OWL file into LBD
 	 * 
-	 * @param ifc_filename The absolute path for the IFC file that will be converted
+	 * @param ifcowl_filename                  The absolute path for the IfcOWL file
+	 *                                         that will be converted	 
 	 * @param target_file  The main file name for the output. If there are many,
 	 *                     they will be sharing
 	 * @return The model as a Jena-model
@@ -219,27 +162,27 @@ public class IFCtoLBDConverter {
 	}
 
 	/**
-	 * Convert an IFC STEP file into LBD
+	 * Convert an IfcOWL file into LBD
 	 * 
-	 * @param ifc_filename The absolute path for the IFC file that will be converted
-	 * @return The model as a Jena-model
+	 * @param ifcowl_filename                  The absolute path for the IfcOWL file
+	 *                                         that will be converted	 * @return The model as a Jena-model
 	 */
-	public Model convert(String ifc_filename) {
+	public Model convert(String ifcowl_filename) {
 
 		boolean hasBuildingElements = true;
 		boolean hasSeparateBuildingElementsModel = false;
 		boolean hasBuildingProperties = true;
 		boolean hasSeparatePropertiesModel = false;
 		boolean hasGeolocation = true;
-		convert(ifc_filename, null, hasBuildingElements, hasSeparateBuildingElementsModel, hasBuildingProperties,
+		convert(ifcowl_filename, null, hasBuildingElements, hasSeparateBuildingElementsModel, hasBuildingProperties,
 				hasSeparatePropertiesModel, hasGeolocation);
 		return lbd_general_output_model;
 	}
 
 	/**
-	 * Convert an IFC STEP file into LBD
+	 * Convert an IfcOWL file into LBD
 	 * 
-	 * @param ifc_filename                     The absolute path for the IFC file
+	 * @param ifcowl_filename                  The absolute path for the IfcOWL file
 	 *                                         that will be converted
 	 * @param target_file                      The main file name for the output. If
 	 *                                         there are many, they will be sharing
@@ -256,16 +199,24 @@ public class IFCtoLBDConverter {
 	 *                                         longitude are added.
 	 * @return The model as a Jena-model
 	 */
-	public Model convert(String ifc_filename, String target_file, boolean hasBuildingElements,
+	public Model convert(String ifcowl_filename, String target_file, boolean hasBuildingElements,
 			boolean hasSeparateBuildingElementsModel, boolean hasBuildingProperties, boolean hasSeparatePropertiesModel,
 			boolean hasGeolocation) {
-		ifcowl_model = readAndConvertIFC(ifc_filename, uriBase); // Before: readInOntologies(ifc_filename);
+		ifcowl_model = readIFCOWl(ifcowl_filename); // Before: readInOntologies(ifc_filename);
 
 		eventBus.post(new SystemStatusEvent("Reading in ontologies"));
-		readInOntologies(ifc_filename);
+		readInOntologies(ifcowl_model);
+		if(!this.ontURI.isPresent())
+		{
+			System.err.println("Not an IfcOWL file");
+			return lbd_general_output_model;
+		}
+			
 		createIfcLBDProductMapping();
 
-		addNamespaces(uriBase, props_level, hasBuildingElements, hasBuildingProperties);
+		if(!uriBase.isPresent())
+			uriBase=Optional.of("https://dot.dc.rwth-aachen.de/IFCtoLBDset#");
+		addNamespaces(uriBase.get(), props_level, hasBuildingElements, hasBuildingProperties);
 
 		eventBus.post(new SystemStatusEvent("IFC->LBD"));
 		if (this.ontURI.isPresent())
@@ -288,9 +239,7 @@ public class IFCtoLBDConverter {
 
 	private void conversion(String target_file, boolean hasBuildingElements, boolean hasSeparateBuildingElementsModel,
 			boolean hasBuildingProperties, boolean hasSeparatePropertiesModel, boolean hasGeolocation) {
-		System.out.println("sites list "+ifcOWL.getIfcSite());
 		IfcOWLUtils.listSites(ifcOWL, ifcowl_model).stream().map(rn -> rn.asResource()).forEach(site -> {
-			System.out.println("Site");
 			Resource sio = createformattedURI(site, lbd_general_output_model, "Site");
 			String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL);
 			String uncompressed_guid_site = GuidCompressor.uncompressGuidString(guid_site);
@@ -394,7 +343,7 @@ public class IFCtoLBDConverter {
 			try {
 				addGeolocation2BOT();
 			} catch (Exception e) {
-				e.printStackTrace();
+				System.out.println("No geolocation");
 				eventBus.post(new SystemStatusEvent("Info : No geolocation"));
 			}
 		}
@@ -497,10 +446,10 @@ public class IFCtoLBDConverter {
 				PropertySet ps = this.propertysets.get(propertyset.getURI());
 				if (ps == null) {
 					if (!propertyset_name.isEmpty())
-						ps = new PropertySet(this.uriBase, lbd_property_output_model, this.ontology_model,
+						ps = new PropertySet(this.uriBase.get(), lbd_property_output_model, this.ontology_model,
 								propertyset_name.get(0).toString(), props_level, hasPropertiesBlankNodes);
 					else
-						ps = new PropertySet(this.uriBase, lbd_property_output_model, this.ontology_model, "",
+						ps = new PropertySet(this.uriBase.get(), lbd_property_output_model, this.ontology_model, "",
 								props_level, hasPropertiesBlankNodes);
 					System.out.println("PUT: " + propertyset.getURI());
 					this.propertysets.put(propertyset.getURI(), ps);
@@ -681,7 +630,7 @@ public class IFCtoLBDConverter {
 			return;
 		String guid = IfcOWLUtils.getGUID(r, this.ifcOWL);
 		String uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
-		final AttributeSet connected_attributes = new AttributeSet(this.uriBase, output_model, this.props_level,
+		final AttributeSet connected_attributes = new AttributeSet(this.uriBase.get(), output_model, this.props_level,
 				hasPropertiesBlankNodes);
 		r.listProperties().forEachRemaining(s -> {
 			String ps = s.getPredicate().getLocalName();
@@ -738,16 +687,16 @@ public class IFCtoLBDConverter {
 			if (localName.startsWith("IfcPropertySingleValue")) {
 				if (localName.lastIndexOf('_') > 0)
 					localName = localName.substring(localName.lastIndexOf('_') + 1);
-				Resource uri = m.createResource(this.uriBase + "propertySingleValue_" + localName);
+				Resource uri = m.createResource(this.uriBase.get() + "propertySingleValue_" + localName);
 				return uri;
 			}
 			if (localName.toLowerCase().startsWith("ifc"))
 				localName = localName.substring(3);
-			Resource uri = m.createResource(this.uriBase + product_type.toLowerCase() + "_" + localName);
+			Resource uri = m.createResource(this.uriBase.get() + product_type.toLowerCase() + "_" + localName);
 			return uri;
 		} else {
 			Resource guid_uri = m.createResource(
-					this.uriBase + product_type.toLowerCase() + "_" + GuidCompressor.uncompressGuidString(guid));
+					this.uriBase.get() + product_type.toLowerCase() + "_" + GuidCompressor.uncompressGuidString(guid));
 			return guid_uri;
 		}
 	}
@@ -755,11 +704,11 @@ public class IFCtoLBDConverter {
 	private Resource getformattedURI(Resource r, Model m, String product_type) {
 		String guid = IfcOWLUtils.getGUID(r, this.ifcOWL);
 		if (guid == null) {
-			Resource uri = m.getResource(this.uriBase + product_type + "/" + r.getLocalName());
+			Resource uri = m.getResource(this.uriBase.get() + product_type + "/" + r.getLocalName());
 			return uri;
 		} else {
 			Resource guid_uri = m
-					.getResource(this.uriBase + product_type + "/" + GuidCompressor.uncompressGuidString(guid));
+					.getResource(this.uriBase.get() + product_type + "/" + GuidCompressor.uncompressGuidString(guid));
 			return guid_uri;
 		}
 	}
@@ -861,38 +810,26 @@ public class IFCtoLBDConverter {
 
 	/**
 	 * 
-	 * The method converts an IFC STEP formatted file and returns an Apache Jena RDF
+	 * The method reads an IfcOWL formatted file and returns an Apache Jena RDF
 	 * memory storage model that contains the generated RDF triples.
 	 * 
 	 * Apache Jena: https://jena.apache.org/index.html
 	 * 
-	 * The generated temporsary file is used to reduce the temporary memory need and
-	 * make it possible to convert larger models.
 	 * 
-	 * Sets the this.ontURI class variable. That is used to create the right ifcOWL
-	 * version based ontology base URI that is used to create the ifcOWL version
-	 * based peroperties and class URIs-
-	 * 
-	 * @param ifc_file the absolute path (For example: c:\ifcfiles\ifc_file.ifc) for
-	 *                 the IFC file
-	 * @param uriBase  the URL beginning for the elements in the ifcOWL TTL output
+	 * @param ifowlc_file the absolute path (For example: c:\ifcfiles\ifc_file.ttl) for
+	 *                 the IfcOWL file
 	 * @return the Jena Model that contains the ifcOWL attribute value (Abox)
 	 *         output.
 	 */
-	public Model readAndConvertIFC(String ifc_file, String uriBase) {
+	public Model readIFCOWl(String ifcowl_file) {
 		try {
-			IfcSpfReader rj = new IfcSpfReader();
-			File tempFile = File.createTempFile("ifc", ".ttl");
 			try {
 				Model m = ModelFactory.createDefaultModel();
-				this.ontURI = rj.convert(ifc_file, tempFile.getAbsolutePath(), uriBase);
-				RDFDataMgr.read(m, tempFile.getAbsolutePath());
+				RDFDataMgr.read(m, ifcowl_file);
 				return m;
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
-			} finally {
-				tempFile.deleteOnExit();
-			}
+			} 
 
 		} catch (Exception e) {
 			eventBus.post(new SystemStatusEvent(
@@ -900,7 +837,6 @@ public class IFCtoLBDConverter {
 			e.printStackTrace();
 
 		}
-		System.out.println("IFC-RDF conversion not done");
 		return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
 	}
 
@@ -908,12 +844,66 @@ public class IFCtoLBDConverter {
 	 * This internal method reads in all the associated ontologies so that ontology
 	 * inference can ne used during the conversion.
 	 * 
-	 * @param ifc_file the absolute path (For example: c:\ifcfiles\ifc_file.ifc) for
-	 *                 the IFC file
+	 * @param ifc_model the Jena model of the IifcOWL 
 	 */
-	private void readInOntologies(String ifc_file) {
-		IfcOWLUtils.readIfcOWLOntology(ifc_file, ontology_model);
-		IfcOWLUtils.readIfcOWLOntology(ifc_file, ifcowl_model);
+	private void readInOntologies(Model ifc_model) {
+		
+		
+		NsIterator nsIterator=ifc_model.listNameSpaces();
+		Optional<String> exp=Optional.empty();
+		Optional<String> base_uri=Optional.empty();
+		String inst_ns=ifc_model.getNsPrefixMap().get("inst");
+		if(inst_ns!=null && !this.uriBase.isPresent())
+			this.uriBase=Optional.of(inst_ns);
+		String ifcowl_ns=ifc_model.getNsPrefixMap().get("ifcowl");
+		if(ifcowl_ns!=null)
+		{
+			if(ifcowl_ns.toLowerCase().contains("ifc2x3"))
+			{
+				exp=Optional.of("IFC2X3_TC1");
+				base_uri=Optional.of(ifcowl_ns);
+				if(!this.ontURI.isPresent())
+					this.ontURI=base_uri;
+					
+			}
+			if(ifcowl_ns.toLowerCase().contains("ifc4"))
+			{
+				exp=Optional.of("IFC4_ADD1");
+				base_uri=Optional.of(ifcowl_ns);
+				if(!this.ontURI.isPresent())
+					this.ontURI=base_uri;
+				
+			}
+		}
+		else	
+		while(nsIterator.hasNext())
+		{
+			String ns=nsIterator.next();
+			if(ns.toLowerCase().contains("ifc2x3"))
+			{
+				exp=Optional.of("IFC2X3_TC1");
+				base_uri=Optional.of(ns);
+				if(!this.ontURI.isPresent())
+					this.ontURI=base_uri;
+					
+			}
+			if(ns.toLowerCase().contains("ifc4"))
+			{
+				exp=Optional.of("IFC4_ADD1");
+				base_uri=Optional.of(ns);
+				if(!this.ontURI.isPresent())
+					this.ontURI=base_uri;
+				
+			}
+		}
+		
+		if(base_uri.isPresent())
+		{
+		   IfcOWLUtils.readIfcOWLOntologyWhenSchemaKnown(exp.get(), this.ontology_model, base_uri.get());
+		   IfcOWLUtils.readIfcOWLOntologyWhenSchemaKnown(exp.get(), this.ifcowl_model, base_uri.get());
+		}
+		else
+			System.err.println("Unknown IfcOWL");
 
 		RDFUtilsSMLS.readInOntologyTTL(ontology_model, "prod.ttl", this.eventBus);
 		// RDFUtils.readInOntologyTTL(ontology_model,
@@ -984,44 +974,6 @@ public class IFCtoLBDConverter {
 
 	}
 
-	public static void main(String[] args) {
 
-		if (args.length > 2) {
-			new IFCtoLBDConverter(args[0], args[1], args[2], 2, true, false, true, false, false, true);
-		} else if (args.length == 1) {
-			// directory upload
-			final List<String> inputFiles;
-			final List<String> outputFiles;
-			inputFiles = FileUtils.listFiles(args[0]);
-			outputFiles = null;
-
-			for (int i = 0; i < inputFiles.size(); ++i) {
-				final String inputFile = inputFiles.get(i);
-				String outputFile;
-				if (inputFile.endsWith(".ifc")) {
-					if (outputFiles == null) {
-						outputFile = inputFile.substring(0, inputFile.length() - 4) + ".ttl";
-					} else {
-						outputFile = outputFiles.get(i);
-					}
-
-					outputFile = outputFile.replaceAll(args[0], args[0] + "\\___out\\");
-					String copyFile = inputFile.replaceAll(args[0], args[0] + "\\___done\\");
-
-					// move file to output directory
-
-					System.out.println("--------- converting: " + inputFile);
-					new IFCtoLBDConverter(inputFile, "https://dot.ugent.be/IFCtoLBDset#", outputFile, 0, true, false,
-							true, false, false, false);
-
-					// move original file to output directory
-					File afile = new File(inputFile);
-					afile.renameTo(new File(copyFile));
-					System.out.println("--------- done ");
-				}
-			}
-		} else
-			System.out.println("Usage: IFCtoLBDConverter ifc_filename base_uri targer_file");
-	}
 
 }
