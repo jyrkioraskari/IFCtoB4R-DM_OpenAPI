@@ -38,7 +38,7 @@ import com.google.common.eventbus.EventBus;
  * limitations under the License.
  */
 
-public class RDFUtilsSMLS {
+public class RDFUtils {
 
 	/**
 	 * 
@@ -176,7 +176,7 @@ public class RDFUtilsSMLS {
 	 */
 	public static Optional<Resource> getType(Resource r) {
 		RDFStep[] path = { new RDFStep(RDF.type) };
-		return RDFUtilsSMLS.pathQuery(r, path).stream().map(rn -> rn.asResource()).findAny();
+		return RDFUtils.pathQuery(r, path).stream().map(rn -> rn.asResource()).findAny();
 	}
 
 }

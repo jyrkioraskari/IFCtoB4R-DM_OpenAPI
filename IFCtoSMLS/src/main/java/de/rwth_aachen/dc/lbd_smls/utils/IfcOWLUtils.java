@@ -70,6 +70,12 @@ public class IfcOWLUtils {
 		RDFStep[] path = { new InvRDFStep(RDF.type) };
 		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcSite()), path);
 	}
+	
+	
+	public static List<RDFNode> listBuilding(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
+		RDFStep[] path = { new InvRDFStep(RDF.type) };
+		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcBuilding()), path);
+	}
 
 	/**
 	 * 

@@ -31,13 +31,10 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
-import org.bimserver.plugins.deserializers.DeserializeException;
-import org.bimserver.plugins.renderengine.RenderEngineException;
 
 import com.buildingsmart.tech.ifcowl.IfcSpfReader;
 import com.openifctools.guidcompressor.GuidCompressor;
 
-import de.rwth_aachen.dc.lbd.IFCBoundingBoxes;
 import de.rwth_aachen.dc.lbd_smls.geo.IFC_Geolocation;
 import de.rwth_aachen.dc.lbd_smls.geo.WktLiteral;
 import de.rwth_aachen.dc.lbd_smls.ns.IfcOWLNameSpace;
@@ -47,7 +44,6 @@ import de.rwth_aachen.dc.lbd_smls.utils.FileUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.IfcOWLUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.RDFUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.rdfpath.RDFStep;
-import nl.tue.ddss.bcf.BoundingBox;
 
 /*
  *  Copyright (c) 2017,2018,2019.2020 Jyrki Oraskari (Jyrki.Oraskari@gmail.f)
@@ -76,8 +72,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 	private Model ifcowl_model;
 	private Model ontology_model = null;
 	private Map<String, List<Resource>> ifcowl_product_map;
-	private Optional<String> uriBase=Optional.empty();
-
+	private Optional<String> uriBase = Optional.empty();
 
 	private Optional<String> ontURI = Optional.empty();
 	private IfcOWLNameSpace ifcOWL;
@@ -87,7 +82,6 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 	private Model lbd_general_output_model;
 
-	
 	public Model convert(String ifcowl_filename, String uriBase) {
 		this.propertysets = new HashMap<>();
 		this.ifcowl_product_map = new HashMap<>();
@@ -114,6 +108,8 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
 
+		if (!uriBase.isPresent())
+			uriBase = Optional.of("https://dot.dc.rwth-aachen.de/IFCtoLBDset#");
 		addNamespaces(uriBase.get());
 
 		if (this.ontURI.isPresent())
@@ -129,114 +125,36 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 		return lbd_general_output_model;
 	}
 
-
 	Set<Resource> has_geometry = new HashSet<>();
 
 	private void conversion() {
-		System.out.println("Conversion");
-		IfcOWLUtils.listSites(ifcOWL, ifcowl_model).stream().map(rn -> rn.asResource()).forEach(site -> {
-			Resource sio = createformattedURI(site, lbd_general_output_model, "Site");
-			String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL);
-			String uncompressed_guid_site = GuidCompressor.uncompressGuidString(guid_site);
 
-			addAttrributes(lbd_general_output_model, site.asResource(), sio);
-			sio.addProperty(RDF.type, LBD_NS.BOT.site);
+		List<RDFNode> sites = IfcOWLUtils.listSites(ifcOWL, ifcowl_model);
+		if (!sites.isEmpty()) {
+			sites.stream().map(rn -> rn.asResource()).forEach(site -> {
+				Resource sio = createformattedURI(site, lbd_general_output_model, "Site");
+				String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL);
+				String uncompressed_guid_site = GuidCompressor.uncompressGuidString(guid_site);
+				addAttrributes(lbd_general_output_model, site.asResource(), sio);
 
+				sio.addProperty(RDF.type, LBD_NS.BOT.site);
 
-			IfcOWLUtils.listPropertysets(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
-				PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
-				if (p_set != null) {
-					p_set.connect(sio, uncompressed_guid_site);
-				}
-			});
-
-			IfcOWLUtils.listBuildings(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(building -> {
-				if (!RDFUtils.getType(building.asResource()).get().getURI().endsWith("#IfcBuilding")) {
-					System.err.println("Not an #IfcBuilding");
-					return;
-				}
-				System.out.println("Building: " + building.asResource().getURI());
-
-				Resource bo = createformattedURI(building, lbd_general_output_model, "Building");
-				String guid_building = IfcOWLUtils.getGUID(building, this.ifcOWL);
-				String uncompressed_guid_building = GuidCompressor.uncompressGuidString(guid_building);
-
-				addAttrributes(lbd_general_output_model, building, bo);
-
-				bo.addProperty(RDF.type, LBD_NS.BOT.building);
-				sio.addProperty(LBD_NS.BOT.hasBuilding, bo);
-
-				IfcOWLUtils.listPropertysets(building, ifcOWL).stream().map(rn -> rn.asResource())
-						.forEach(propertyset -> {
-							PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
-							if (p_set != null) {
-								p_set.connect(bo, uncompressed_guid_building);
-							}
-						});
-
-				IfcOWLUtils.listStoreys(building, ifcOWL).stream().map(rn -> rn.asResource()).forEach(storey -> {
-
-					if (!RDFUtils.getType(storey.asResource()).get().getURI().endsWith("#IfcBuildingStorey")) {
-						System.err.println("No an #IfcBuildingStorey");
-						return;
+				IfcOWLUtils.listPropertysets(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
+					PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+					if (p_set != null) {
+						p_set.connect(sio, uncompressed_guid_site);
 					}
+				});
 
-					Resource so = createformattedURI(storey, lbd_general_output_model, "Storey");
-					String guid_storey = IfcOWLUtils.getGUID(storey, this.ifcOWL);
-					String uncompressed_guid_storey = GuidCompressor.uncompressGuidString(guid_storey);
-
-					addAttrributes(lbd_general_output_model, storey, so);
-
-					bo.addProperty(LBD_NS.BOT.hasStorey, so);
-					so.addProperty(RDF.type, LBD_NS.BOT.storey);
-
-					IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource())
-							.forEach(propertyset -> {
-								PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
-								if (p_set != null)
-									p_set.connect(so, uncompressed_guid_storey);
-							});
-
-					IfcOWLUtils.listContained_StoreyElements(storey, ifcOWL).stream().map(rn -> rn.asResource())
-							.forEach(element -> {
-								if (RDFUtils.getType(element.asResource()).get().getURI().endsWith("#IfcSpace"))
-									return;
-								connectElement(so, element);
-							});
-
-					IfcOWLUtils.listStoreySpaces(storey.asResource(), ifcOWL).stream().forEach(space -> {
-						if (!RDFUtils.getType(space.asResource()).get().getURI().endsWith("#IfcSpace"))
-							return;
-						System.out.println("Space: " + space.asResource().getURI());
-						Resource spo = createformattedURI(space.asResource(), lbd_general_output_model, "Space");
-						String guid_space = IfcOWLUtils.getGUID(space.asResource(), this.ifcOWL);
-						String uncompressed_guid_space = GuidCompressor.uncompressGuidString(guid_space);
-						addAttrributes(lbd_general_output_model, space.asResource(), spo);
-
-						so.addProperty(LBD_NS.BOT.hasSpace, spo);
-						spo.addProperty(RDF.type, LBD_NS.BOT.space);
-
-						IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream()
-								.map(rn -> rn.asResource()).forEach(element -> {
-									connectElement(spo, element);
-								});
-
-						IfcOWLUtils.listAdjacent_SpaceElements(space.asResource(), ifcOWL).stream()
-								.map(rn -> rn.asResource()).forEach(element -> {
-									connectElement(spo, LBD_NS.BOT.adjacentElement, element);
-								});
-
-						IfcOWLUtils.listPropertysets(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
-								.forEach(propertyset -> {
-									PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
-									if (p_set != null) {
-										p_set.connect(spo, uncompressed_guid_space);
-									}
-								});
-					});
+				IfcOWLUtils.listBuildings(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(building -> {
+					handleBuilding(sio, building);
 				});
 			});
-		});
+		} else {
+			IfcOWLUtils.listBuilding(ifcOWL, ifcowl_model).stream().map(rn -> rn.asResource()).forEach(building -> {
+				handleBuilding(building);
+			});
+		}
 
 		try {
 			addGeolocation2BOT();
@@ -245,6 +163,97 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 		}
 	}
 
+	private void handleBuilding(Resource ifcowl_building) {
+		handleBuilding(null, ifcowl_building);
+	}
+
+	private void handleBuilding(Resource bot_site_element, Resource ifcowl_building) {
+		if (!RDFUtils.getType(ifcowl_building.asResource()).get().getURI().endsWith("#IfcBuilding")) {
+			System.err.println("Not an #IfcBuilding");
+			return;
+		}
+		System.out.println("Building: " + ifcowl_building.asResource().getURI());
+
+		Resource bo = createformattedURI(ifcowl_building, lbd_general_output_model, "Building");
+		String guid_building = IfcOWLUtils.getGUID(ifcowl_building, this.ifcOWL);
+		String uncompressed_guid_building = GuidCompressor.uncompressGuidString(guid_building);
+
+		addAttrributes(lbd_general_output_model, ifcowl_building, bo);
+
+		bo.addProperty(RDF.type, LBD_NS.BOT.building);
+
+		if (bot_site_element != null)
+			bot_site_element.addProperty(LBD_NS.BOT.hasBuilding, bo);
+
+		IfcOWLUtils.listPropertysets(ifcowl_building, ifcOWL).stream().map(rn -> rn.asResource())
+				.forEach(propertyset -> {
+					PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+					if (p_set != null) {
+						p_set.connect(bo, uncompressed_guid_building);
+					}
+				});
+
+		IfcOWLUtils.listStoreys(ifcowl_building, ifcOWL).stream().map(rn -> rn.asResource()).forEach(storey -> {
+
+			if (!RDFUtils.getType(storey.asResource()).get().getURI().endsWith("#IfcBuildingStorey")) {
+				System.err.println("No an #IfcBuildingStorey");
+				return;
+			}
+
+			Resource so = createformattedURI(storey, lbd_general_output_model, "Storey");
+			String guid_storey = IfcOWLUtils.getGUID(storey, this.ifcOWL);
+			String uncompressed_guid_storey = GuidCompressor.uncompressGuidString(guid_storey);
+
+			addAttrributes(lbd_general_output_model, storey, so);
+
+			bo.addProperty(LBD_NS.BOT.hasStorey, so);
+			so.addProperty(RDF.type, LBD_NS.BOT.storey);
+
+			IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
+				PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+				if (p_set != null)
+					p_set.connect(so, uncompressed_guid_storey);
+			});
+
+			IfcOWLUtils.listContained_StoreyElements(storey, ifcOWL).stream().map(rn -> rn.asResource())
+					.forEach(element -> {
+						if (RDFUtils.getType(element.asResource()).get().getURI().endsWith("#IfcSpace"))
+							return;
+						connectElement(so, element);
+					});
+
+			IfcOWLUtils.listStoreySpaces(storey.asResource(), ifcOWL).stream().forEach(space -> {
+				if (!RDFUtils.getType(space.asResource()).get().getURI().endsWith("#IfcSpace"))
+					return;
+				System.out.println("Space: " + space.asResource().getURI());
+				Resource spo = createformattedURI(space.asResource(), lbd_general_output_model, "Space");
+				String guid_space = IfcOWLUtils.getGUID(space.asResource(), this.ifcOWL);
+				String uncompressed_guid_space = GuidCompressor.uncompressGuidString(guid_space);
+				addAttrributes(lbd_general_output_model, space.asResource(), spo);
+
+				so.addProperty(LBD_NS.BOT.hasSpace, spo);
+				spo.addProperty(RDF.type, LBD_NS.BOT.space);
+
+				IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
+						.forEach(element -> {
+							connectElement(spo, element);
+						});
+
+				IfcOWLUtils.listAdjacent_SpaceElements(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
+						.forEach(element -> {
+							connectElement(spo, LBD_NS.BOT.adjacentElement, element);
+						});
+
+				IfcOWLUtils.listPropertysets(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
+						.forEach(propertyset -> {
+							PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+							if (p_set != null) {
+								p_set.connect(spo, uncompressed_guid_space);
+							}
+						});
+			});
+		});
+	}
 
 	private final Map<String, String> unitmap = new HashMap<>();
 
@@ -339,8 +348,8 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 							ps = new PropertySet_SMLS(this.uriBase.get(), lbd_general_output_model, this.ontology_model,
 									propertyset_name.get(0).toString(), unitmap);
 						else
-							ps = new PropertySet_SMLS(this.uriBase.get(), lbd_general_output_model, this.ontology_model, "",
-									unitmap);
+							ps = new PropertySet_SMLS(this.uriBase.get(), lbd_general_output_model, this.ontology_model,
+									"", unitmap);
 						this.propertysets.put(propertyset.getURI(), ps);
 					}
 					if (property_type.size() > 0) {
@@ -516,37 +525,42 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 			return;
 		String guid = IfcOWLUtils.getGUID(r, this.ifcOWL);
 		String uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
-		final AttributeSet_SMLS connected_attributes = new AttributeSet_SMLS(this.uriBase.get(), output_model, this.unitmap);
+		final AttributeSet_SMLS connected_attributes = new AttributeSet_SMLS(this.uriBase.get(), output_model,
+				this.unitmap);
 		r.listProperties().forEachRemaining(s -> {
 			String ps = s.getPredicate().getLocalName();
-			Resource attr = s.getObject().asResource();
-			Optional<Resource> atype = RDFUtils.getType(attr);
-			if (ps.startsWith("tag_"))
-				ps = "batid";
-			final String property_string = ps; // Just to make variable final (needed in the following stream)
-			if (atype.isPresent()) {
-				if (atype.get().getLocalName().equals("IfcLabel")) {
-					attr.listProperties(ifcOWL.getHasString()).forEachRemaining(attr_s -> {
-						if (attr_s.getObject().isLiteral()
-								&& attr_s.getObject().asLiteral().getLexicalForm().length() > 0) {
-							connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype);
-						}
-					});
+			// In case there are non-standard attributes
+			if (s.getObject().isLiteral()) {
+				bot_r.addProperty(s.getPredicate(), s.getObject());
+			} else {
+				Resource attr = s.getObject().asResource();
+				Optional<Resource> atype = RDFUtils.getType(attr);
+				if (ps.startsWith("tag_"))
+					ps = "batid";
+				final String property_string = ps; // Just to make variable final (needed in the following stream)
+				if (atype.isPresent()) {
+					if (atype.get().getLocalName().equals("IfcLabel")) {
+						attr.listProperties(ifcOWL.getHasString()).forEachRemaining(attr_s -> {
+							if (attr_s.getObject().isLiteral()
+									&& attr_s.getObject().asLiteral().getLexicalForm().length() > 0) {
+								connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype);
+							}
+						});
 
-				} else if (atype.get().getLocalName().equals("IfcIdentifier")) {
-					attr.listProperties(ifcOWL.getHasString()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
-				} else {
-					attr.listProperties(ifcOWL.getHasString()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
-					attr.listProperties(ifcOWL.getHasInteger()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
-					attr.listProperties(ifcOWL.getHasDouble()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
-					attr.listProperties(ifcOWL.getHasBoolean()).forEachRemaining(
-							attr_s -> connected_attributes.putAnameValue(property_string, attr_s.getObject(), atype));
+					} else if (atype.get().getLocalName().equals("IfcIdentifier")) {
+						attr.listProperties(ifcOWL.getHasString()).forEachRemaining(attr_s -> connected_attributes
+								.putAnameValue(property_string, attr_s.getObject(), atype));
+					} else {
+						attr.listProperties(ifcOWL.getHasString()).forEachRemaining(attr_s -> connected_attributes
+								.putAnameValue(property_string, attr_s.getObject(), atype));
+						attr.listProperties(ifcOWL.getHasInteger()).forEachRemaining(attr_s -> connected_attributes
+								.putAnameValue(property_string, attr_s.getObject(), atype));
+						attr.listProperties(ifcOWL.getHasDouble()).forEachRemaining(attr_s -> connected_attributes
+								.putAnameValue(property_string, attr_s.getObject(), atype));
+						attr.listProperties(ifcOWL.getHasBoolean()).forEachRemaining(attr_s -> connected_attributes
+								.putAnameValue(property_string, attr_s.getObject(), atype));
+					}
 				}
-
 			}
 		});
 		connected_attributes.connect(bot_r, uncompressed_guid);
@@ -572,20 +586,20 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 			if (localName.startsWith("IfcPropertySingleValue")) {
 				if (localName.lastIndexOf('_') > 0)
 					localName = localName.substring(localName.lastIndexOf('_') + 1);
-				Resource uri = m.createResource(this.uriBase + "propertySingleValue_" + localName);
+				Resource uri = m.createResource(this.uriBase.get() + "propertySingleValue_" + localName);
 				System.out.println("sameas 1: " + r);
 				uri.addProperty(OWL.sameAs, r);
 				return uri;
 			}
 			if (localName.toLowerCase().startsWith("ifc"))
 				localName = localName.substring(3);
-			Resource uri = m.createResource(this.uriBase + product_type.toLowerCase() + "_" + localName);
+			Resource uri = m.createResource(this.uriBase.get() + product_type.toLowerCase() + "_" + localName);
 			System.out.println("sameas 2: " + r);
 			uri.addProperty(OWL.sameAs, r);
 			return uri;
 		} else {
 			Resource guid_uri = m.createResource(
-					this.uriBase + product_type.toLowerCase() + "_" + GuidCompressor.uncompressGuidString(guid));
+					this.uriBase.get() + product_type.toLowerCase() + "_" + GuidCompressor.uncompressGuidString(guid));
 			System.out.println("sameas 3: " + r);
 			guid_uri.addProperty(OWL.sameAs, r);
 			return guid_uri;
@@ -595,11 +609,11 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 	private Resource getformattedURI(Resource r, Model m, String product_type) {
 		String guid = IfcOWLUtils.getGUID(r, this.ifcOWL);
 		if (guid == null) {
-			Resource uri = m.getResource(this.uriBase + product_type + "/" + r.getLocalName());
+			Resource uri = m.getResource(this.uriBase.get() + product_type + "/" + r.getLocalName());
 			return uri;
 		} else {
 			Resource guid_uri = m
-					.getResource(this.uriBase + product_type + "/" + GuidCompressor.uncompressGuidString(guid));
+					.getResource(this.uriBase.get() + product_type + "/" + GuidCompressor.uncompressGuidString(guid));
 			return guid_uri;
 		}
 	}
@@ -700,6 +714,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 		}
 
 	}
+
 	/**
 	 * 
 	 * The method reads an IfcOWL formatted file and returns an Apache Jena RDF
@@ -708,8 +723,8 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 	 * Apache Jena: https://jena.apache.org/index.html
 	 * 
 	 * 
-	 * @param ifowlc_file the absolute path (For example: c:\ifcfiles\ifc_file.ttl) for
-	 *                 the IfcOWL file
+	 * @param ifowlc_file the absolute path (For example: c:\ifcfiles\ifc_file.ttl)
+	 *                    for the IfcOWL file
 	 * @return the Jena Model that contains the ifcOWL attribute value (Abox)
 	 *         output.
 	 */
@@ -721,7 +736,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 				return m;
 			} catch (Exception e) {
 				e.printStackTrace();
-			} 
+			}
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -761,7 +776,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 				m.setNsPrefix("owl", OWL.getURI());
 				m.setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#");
 				m.setNsPrefix("inst", uriBase);
-	
+
 				this.ontURI = rj.convert(ifc_file, tempFile.getAbsolutePath(), uriBase);
 				RDFDataMgr.read(m, tempFile.getAbsolutePath());
 				return m;
@@ -770,10 +785,10 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 			} finally {
 				tempFile.deleteOnExit();
 			}
-	
+
 		} catch (Exception e) {
 			e.printStackTrace();
-	
+
 		}
 		System.out.println("IFC-RDF conversion not done");
 		return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
@@ -782,17 +797,18 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 	/**
 	 * 
 	 * Reads in a Turtle - Terse RDF Triple Language (TTL) formatted ontology file:
-	 * Turtle - Terse RDF Triple Language:  https://www.w3.org/TeamSubmission/turtle/
+	 * Turtle - Terse RDF Triple Language: https://www.w3.org/TeamSubmission/turtle/
 	 * 
-	 * The extra lines make sure that the files are found if run under Eclipse IDE or as a
-	 * runnable Java Archive file (JAR). 
+	 * The extra lines make sure that the files are found if run under Eclipse IDE
+	 * or as a runnable Java Archive file (JAR).
 	 * 
 	 * Eclipse: https://www.eclipse.org/
 	 * 
-	 * @param model  An Apache Jena model: RDF store run on memory. 
-	 * @param ontology_file An Apache Jena ontokigy model: RDF store run on memory containing an ontology engine. 
-	 * If no user interface is present, adding messages to the channel does nothing.
-
+	 * @param model         An Apache Jena model: RDF store run on memory.
+	 * @param ontology_file An Apache Jena ontokigy model: RDF store run on memory
+	 *                      containing an ontology engine. If no user interface is
+	 *                      present, adding messages to the channel does nothing.
+	 * 
 	 */
 	public static void readInOntologyTTL(Model model, String ontology_file) {
 
@@ -809,7 +825,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 					return;
 				}
 			}
-			RDFDataMgr.read(model, in,Lang.TTL);
+			RDFDataMgr.read(model, in, Lang.TTL);
 			in.close();
 
 		} catch (Exception e) {
@@ -818,7 +834,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 		}
 
 	}
-	
+
 	/**
 	 * This internal method reads in all the associated ontologies so that ontology
 	 * inference can ne used during the conversion.
@@ -827,60 +843,51 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 	 *                 the IFC file
 	 */
 	private void readInOntologies(Model ifc_model) {
-		NsIterator nsIterator=ifc_model.listNameSpaces();
-		Optional<String> exp=Optional.empty();
-		Optional<String> base_uri=Optional.empty();
-		String inst_ns=ifc_model.getNsPrefixMap().get("inst");
-		if(inst_ns!=null && !this.uriBase.isPresent())
-			this.uriBase=Optional.of(inst_ns);
-		String ifcowl_ns=ifc_model.getNsPrefixMap().get("ifcowl");
-		if(ifcowl_ns!=null)
-		{
-			if(ifcowl_ns.toLowerCase().contains("ifc2x3"))
-			{
-				exp=Optional.of("IFC2X3_TC1");
-				base_uri=Optional.of(ifcowl_ns);
-				if(!this.ontURI.isPresent())
-					this.ontURI=base_uri;
-					
+		NsIterator nsIterator = ifc_model.listNameSpaces();
+		Optional<String> exp = Optional.empty();
+		Optional<String> base_uri = Optional.empty();
+		String inst_ns = ifc_model.getNsPrefixMap().get("inst");
+		if (inst_ns != null && !this.uriBase.isPresent())
+			this.uriBase = Optional.of(inst_ns);
+		String ifcowl_ns = ifc_model.getNsPrefixMap().get("ifcowl");
+		if (ifcowl_ns != null) {
+			if (ifcowl_ns.toLowerCase().contains("ifc2x3")) {
+				exp = Optional.of("IFC2X3_TC1");
+				base_uri = Optional.of(ifcowl_ns);
+				if (!this.ontURI.isPresent())
+					this.ontURI = base_uri;
+
 			}
-			if(ifcowl_ns.toLowerCase().contains("ifc4"))
-			{
-				exp=Optional.of("IFC4_ADD1");
-				base_uri=Optional.of(ifcowl_ns);
-				if(!this.ontURI.isPresent())
-					this.ontURI=base_uri;
-				
+			if (ifcowl_ns.toLowerCase().contains("ifc4")) {
+				exp = Optional.of("IFC4_ADD1");
+				base_uri = Optional.of(ifcowl_ns);
+				if (!this.ontURI.isPresent())
+					this.ontURI = base_uri;
+
 			}
-		}
-		else	
-		while(nsIterator.hasNext())
-		{
-			String ns=nsIterator.next();
-			if(ns.toLowerCase().contains("ifc2x3"))
-			{
-				exp=Optional.of("IFC2X3_TC1");
-				base_uri=Optional.of(ns);
-				if(!this.ontURI.isPresent())
-					this.ontURI=base_uri;
-					
+		} else
+			while (nsIterator.hasNext()) {
+				String ns = nsIterator.next();
+				if (ns.toLowerCase().contains("ifc2x3")) {
+					exp = Optional.of("IFC2X3_TC1");
+					base_uri = Optional.of(ns);
+					if (!this.ontURI.isPresent())
+						this.ontURI = base_uri;
+
+				}
+				if (ns.toLowerCase().contains("ifc4")) {
+					exp = Optional.of("IFC4_ADD1");
+					base_uri = Optional.of(ns);
+					if (!this.ontURI.isPresent())
+						this.ontURI = base_uri;
+
+				}
 			}
-			if(ns.toLowerCase().contains("ifc4"))
-			{
-				exp=Optional.of("IFC4_ADD1");
-				base_uri=Optional.of(ns);
-				if(!this.ontURI.isPresent())
-					this.ontURI=base_uri;
-				
-			}
-		}
-		
-		if(base_uri.isPresent())
-		{
-		   IfcOWLUtils.readIfcOWLOntologyWhenSchemaKnown(exp.get(), this.ontology_model, base_uri.get());
-		   IfcOWLUtils.readIfcOWLOntologyWhenSchemaKnown(exp.get(), this.ifcowl_model, base_uri.get());
-		}
-		else
+
+		if (base_uri.isPresent()) {
+			IfcOWLUtils.readIfcOWLOntologyWhenSchemaKnown(exp.get(), this.ontology_model, base_uri.get());
+			IfcOWLUtils.readIfcOWLOntologyWhenSchemaKnown(exp.get(), this.ifcowl_model, base_uri.get());
+		} else
 			System.err.println("Unknown IfcOWL");
 		readInOntologyTTL(ontology_model, "prod.ttl");
 		readInOntologyTTL(ontology_model, "beo_ontology.ttl");

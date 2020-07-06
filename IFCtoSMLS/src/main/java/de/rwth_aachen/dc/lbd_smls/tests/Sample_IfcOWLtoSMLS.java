@@ -34,8 +34,9 @@ public class  Sample_IfcOWLtoSMLS{
 	
 	
 	public static void main(String[] args) {
-		String ifcFileName = "c:\\ifc2\\Barcelona_Pavilion.ttl";
-		File ifcOwlFile = new File(ifcFileName);
+		String ifcOwlFileName = "c:\\test\\bim4ren\\BIM4REN_DUNAN_20200706.ttl";
+		//String ifcFileName = "c:\\ifc2\\Barcelona_Pavilion.ttl";
+		File ifcOwlFile = new File(ifcOwlFileName);
 		StringBuilder result_string=new StringBuilder();
 		extractIfcOWLtoBD_SMLS(ifcOwlFile, result_string);
 		System.out.println(result_string.toString());

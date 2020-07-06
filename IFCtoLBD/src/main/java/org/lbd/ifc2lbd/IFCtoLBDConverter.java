@@ -35,7 +35,7 @@ import org.lbd.ifc2lbd.ns.LBD_NS;
 import org.lbd.ifc2lbd.ns.OPM;
 import org.lbd.ifc2lbd.utils.FileUtils;
 import org.lbd.ifc2lbd.utils.IfcOWLUtils;
-import org.lbd.ifc2lbd.utils.RDFUtilsSMLS;
+import org.lbd.ifc2lbd.utils.RDFUtils;
 import org.lbd.ifc2lbd.utils.rdfpath.RDFStep;
 
 import com.buildingsmart.tech.ifcowl.IfcSpfReader;
@@ -306,7 +306,7 @@ public class IFCtoLBDConverter {
 			});
 
 			IfcOWLUtils.listBuildings(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(building -> {
-				if (!RDFUtilsSMLS.getType(building.asResource()).get().getURI().endsWith("#IfcBuilding")) {
+				if (!RDFUtils.getType(building.asResource()).get().getURI().endsWith("#IfcBuilding")) {
 					System.err.println("Not an #IfcBuilding");
 					return;
 				}
@@ -330,7 +330,7 @@ public class IFCtoLBDConverter {
 				IfcOWLUtils.listStoreys(building, ifcOWL).stream().map(rn -> rn.asResource()).forEach(storey -> {
 					eventBus.post(new SystemStatusEvent("Storey: " + storey.getLocalName()));
 
-					if (!RDFUtilsSMLS.getType(storey.asResource()).get().getURI().endsWith("#IfcBuildingStorey")) {
+					if (!RDFUtils.getType(storey.asResource()).get().getURI().endsWith("#IfcBuildingStorey")) {
 						System.err.println("No an #IfcBuildingStorey");
 						return;
 					}
@@ -353,13 +353,13 @@ public class IFCtoLBDConverter {
 
 					IfcOWLUtils.listContained_StoreyElements(storey, ifcOWL).stream().map(rn -> rn.asResource())
 							.forEach(element -> {
-								if (RDFUtilsSMLS.getType(element.asResource()).get().getURI().endsWith("#IfcSpace"))
+								if (RDFUtils.getType(element.asResource()).get().getURI().endsWith("#IfcSpace"))
 									return;
 								connectElement(so, element);
 							});
 
 					IfcOWLUtils.listStoreySpaces(storey.asResource(), ifcOWL).stream().forEach(space -> {
-						if (!RDFUtilsSMLS.getType(space.asResource()).get().getURI().endsWith("#IfcSpace"))
+						if (!RDFUtils.getType(space.asResource()).get().getURI().endsWith("#IfcSpace"))
 							return;
 						Resource spo = createformattedURI(space.asResource(), lbd_general_output_model, "Space");
 						String guid_space = IfcOWLUtils.getGUID(space.asResource(), this.ifcOWL);
@@ -404,7 +404,7 @@ public class IFCtoLBDConverter {
 				if (hasSeparateBuildingElementsModel) {
 					String out_products_filename = target_file.substring(0, target_file.lastIndexOf("."))
 							+ "_building_elements.ttl";
-					RDFUtilsSMLS.writeModel(lbd_product_output_model, out_products_filename, this.eventBus);
+					RDFUtils.writeModel(lbd_product_output_model, out_products_filename, this.eventBus);
 					eventBus.post(new SystemStatusEvent("Building elements file is: " + out_products_filename));
 				} else
 					lbd_general_output_model.add(lbd_product_output_model);
@@ -414,13 +414,13 @@ public class IFCtoLBDConverter {
 				if (hasSeparatePropertiesModel) {
 					String out_properties_filename = target_file.substring(0, target_file.lastIndexOf("."))
 							+ "_element_properties.ttl";
-					RDFUtilsSMLS.writeModel(lbd_property_output_model, out_properties_filename, this.eventBus);
+					RDFUtils.writeModel(lbd_property_output_model, out_properties_filename, this.eventBus);
 					eventBus.post(
 							new SystemStatusEvent("Building elements properties file is: " + out_properties_filename));
 				} else
 					lbd_general_output_model.add(lbd_property_output_model);
 			}
-			RDFUtilsSMLS.writeModel(lbd_general_output_model, target_file, this.eventBus);
+			RDFUtils.writeModel(lbd_general_output_model, target_file, this.eventBus);
 			eventBus.post(new SystemStatusEvent("Done. Linked Building Data File is: " + target_file));
 		}
 	}
@@ -449,17 +449,17 @@ public class IFCtoLBDConverter {
 			 */
 
 			System.out.println(
-					"included PSET : " + RDFUtilsSMLS.pathQuery(propertyset, pname_path).get(0).asLiteral().getString());
+					"included PSET : " + RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString());
 
 			final List<RDFNode> propertyset_name = new ArrayList<>();
-			RDFUtilsSMLS.pathQuery(propertyset, pname_path).forEach(name -> propertyset_name.add(name));
+			RDFUtils.pathQuery(propertyset, pname_path).forEach(name -> propertyset_name.add(name));
 
 			RDFStep[] path = { new RDFStep(ifcOWL.getHasProperties_IfcPropertySet()) };
-			RDFUtilsSMLS.pathQuery(propertyset, path).forEach(propertySingleValue -> {
+			RDFUtils.pathQuery(propertyset, path).forEach(propertySingleValue -> {
 
 				RDFStep[] name_path = { new RDFStep(ifcOWL.getName_IfcProperty()), new RDFStep(ifcOWL.getHasString()) };
 				final List<RDFNode> property_name = new ArrayList<>();
-				RDFUtilsSMLS.pathQuery(propertySingleValue.asResource(), name_path)
+				RDFUtils.pathQuery(propertySingleValue.asResource(), name_path)
 						.forEach(name -> property_name.add(name));
 
 				if (property_name.size() == 0)
@@ -469,27 +469,27 @@ public class IFCtoLBDConverter {
 
 				RDFStep[] value_pathS = { new RDFStep(ifcOWL.getNominalValue_IfcPropertySingleValue()),
 						new RDFStep(ifcOWL.getHasString()) };
-				RDFUtilsSMLS.pathQuery(propertySingleValue.asResource(), value_pathS)
+				RDFUtils.pathQuery(propertySingleValue.asResource(), value_pathS)
 						.forEach(value -> property_value.add(value));
 
 				RDFStep[] value_pathD = { new RDFStep(ifcOWL.getNominalValue_IfcPropertySingleValue()),
 						new RDFStep(ifcOWL.getHasDouble()) };
-				RDFUtilsSMLS.pathQuery(propertySingleValue.asResource(), value_pathD)
+				RDFUtils.pathQuery(propertySingleValue.asResource(), value_pathD)
 						.forEach(value -> property_value.add(value));
 
 				RDFStep[] value_pathI = { new RDFStep(ifcOWL.getNominalValue_IfcPropertySingleValue()),
 						new RDFStep(ifcOWL.getHasInteger()) };
-				RDFUtilsSMLS.pathQuery(propertySingleValue.asResource(), value_pathI)
+				RDFUtils.pathQuery(propertySingleValue.asResource(), value_pathI)
 						.forEach(value -> property_value.add(value));
 
 				RDFStep[] value_pathB = { new RDFStep(ifcOWL.getNominalValue_IfcPropertySingleValue()),
 						new RDFStep(ifcOWL.getHasBoolean()) };
-				RDFUtilsSMLS.pathQuery(propertySingleValue.asResource(), value_pathB)
+				RDFUtils.pathQuery(propertySingleValue.asResource(), value_pathB)
 						.forEach(value -> property_value.add(value));
 
 				RDFStep[] value_pathL = { new RDFStep(ifcOWL.getNominalValue_IfcPropertySingleValue()),
 						new RDFStep(ifcOWL.getHasLogical()) };
-				RDFUtilsSMLS.pathQuery(propertySingleValue.asResource(), value_pathL)
+				RDFUtils.pathQuery(propertySingleValue.asResource(), value_pathL)
 						.forEach(value -> property_value.add(value));
 
 				RDFNode pname = property_name.get(0);
@@ -523,7 +523,7 @@ public class IFCtoLBDConverter {
 				} else {
 					ps.putPnameValue(pname.toString(), propertySingleValue);
 					ps.putPsetPropertyRef(pname);
-					RDFUtilsSMLS.copyTriples(0, propertySingleValue, lbd_property_output_model);
+					RDFUtils.copyTriples(0, propertySingleValue, lbd_property_output_model);
 				}
 
 			});
@@ -568,7 +568,7 @@ public class IFCtoLBDConverter {
 
 	private void connectElement(Resource bot_resource, Resource ifc_element) {
 		Optional<String> predefined_type = IfcOWLUtils.getPredefinedData(ifc_element);
-		Optional<Resource> ifcowl_type = RDFUtilsSMLS.getType(ifc_element);
+		Optional<Resource> ifcowl_type = RDFUtils.getType(ifc_element);
 		Optional<Resource> bot_type = Optional.empty();
 		if (ifcowl_type.isPresent()) {
 			bot_type = getLBDProductType(ifcowl_type.get().getLocalName());
@@ -624,7 +624,7 @@ public class IFCtoLBDConverter {
 	 */
 	private void connectElement(Resource bot_resource, Property bot_property, Resource ifcowl_element) {
 		Optional<String> predefined_type = IfcOWLUtils.getPredefinedData(ifcowl_element);
-		Optional<Resource> ifcowl_type = RDFUtilsSMLS.getType(ifcowl_element);
+		Optional<Resource> ifcowl_type = RDFUtils.getType(ifcowl_element);
 		Optional<Resource> lbd_product_type = Optional.empty();
 		if (ifcowl_type.isPresent()) {
 			lbd_product_type = getLBDProductType(ifcowl_type.get().getLocalName());
@@ -686,7 +686,7 @@ public class IFCtoLBDConverter {
 		r.listProperties().forEachRemaining(s -> {
 			String ps = s.getPredicate().getLocalName();
 			Resource attr = s.getObject().asResource();
-			Optional<Resource> atype = RDFUtilsSMLS.getType(attr);
+			Optional<Resource> atype = RDFUtils.getType(attr);
 			if (ps.startsWith("tag_"))
 				ps = "batid";
 			final String property_string = ps; // Just to make variable final (needed in the following stream)
@@ -915,20 +915,20 @@ public class IFCtoLBDConverter {
 		IfcOWLUtils.readIfcOWLOntology(ifc_file, ontology_model);
 		IfcOWLUtils.readIfcOWLOntology(ifc_file, ifcowl_model);
 
-		RDFUtilsSMLS.readInOntologyTTL(ontology_model, "prod.ttl", this.eventBus);
+		RDFUtils.readInOntologyTTL(ontology_model, "prod.ttl", this.eventBus);
 		// RDFUtils.readInOntologyTTL(ontology_model,
 		// "prod_building_elements.ttl",this.eventBus);
-		RDFUtilsSMLS.readInOntologyTTL(ontology_model, "beo_ontology.ttl", this.eventBus);
-		RDFUtilsSMLS.readInOntologyTTL(ontology_model, "prod_furnishing.ttl", this.eventBus);
+		RDFUtils.readInOntologyTTL(ontology_model, "beo_ontology.ttl", this.eventBus);
+		RDFUtils.readInOntologyTTL(ontology_model, "prod_furnishing.ttl", this.eventBus);
 		// RDFUtils.readInOntologyTTL(ontology_model, "prod_mep.ttl",this.eventBus);
-		RDFUtilsSMLS.readInOntologyTTL(ontology_model, "mep_ontology.ttl", this.eventBus);
+		RDFUtils.readInOntologyTTL(ontology_model, "mep_ontology.ttl", this.eventBus);
 
-		RDFUtilsSMLS.readInOntologyTTL(ontology_model, "psetdef.ttl", this.eventBus);
+		RDFUtils.readInOntologyTTL(ontology_model, "psetdef.ttl", this.eventBus);
 		List<String> files = FileUtils.getListofFiles("pset", ".ttl");
 		for (String file : files) {
 			file = file.substring(file.indexOf("pset"));
 			file = file.replaceAll("\\\\", "/");
-			RDFUtilsSMLS.readInOntologyTTL(ontology_model, file, this.eventBus);
+			RDFUtils.readInOntologyTTL(ontology_model, file, this.eventBus);
 			System.out.println("read ontology file : " + file);
 		}
 	}
