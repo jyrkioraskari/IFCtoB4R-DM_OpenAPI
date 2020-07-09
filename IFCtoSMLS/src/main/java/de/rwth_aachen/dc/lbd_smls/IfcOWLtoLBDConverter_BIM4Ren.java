@@ -322,6 +322,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 					RDFUtils.pathQuery(propertySingleValue.asResource(), value_pathS)
 							.forEach(value -> property_value.add(value));
 
+
 					RDFStep[] value_pathD = { new RDFStep(ifcOWL.getNominalValue_IfcPropertySingleValue()),
 							new RDFStep(ifcOWL.getHasDouble()) };
 					RDFUtils.pathQuery(propertySingleValue.asResource(), value_pathD)
@@ -374,6 +375,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 						}
 					} else {
 						System.err.println("!! "+propertySingleValue);
+						System.err.println("Broken ifcOWL file!");
 						//ps.putPnameValue(pname.toString(), propertySingleValue);
 						//ps.putPsetPropertyRef(pname);
 						//RDFUtils.copyTriples(0, propertySingleValue, lbd_general_output_model);
