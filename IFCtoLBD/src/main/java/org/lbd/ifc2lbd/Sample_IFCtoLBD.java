@@ -14,7 +14,8 @@ public class Sample_IFCtoLBD {
 		System.out.println(compressed_guid);
 
 		// String ifcFileName="c:\\ifc\\231110AC-11-Smiley-West-04-07-2007.ifc";
-		String ifcFileName = "c:\\ifc\\Duplex_A_20110505.ifc";
+		//String ifcFileName = "c:\\ifc\\Duplex_A_20110505.ifc";
+		String ifcFileName = "c:\\test\\bim4ren\\BIM4Ren_DUNANT_cleaned_IFC2x3.ifc";
 		File ifcFile = new File(ifcFileName);
 		try {
 			byte[] fileContent = Files.readAllBytes(ifcFile.toPath());

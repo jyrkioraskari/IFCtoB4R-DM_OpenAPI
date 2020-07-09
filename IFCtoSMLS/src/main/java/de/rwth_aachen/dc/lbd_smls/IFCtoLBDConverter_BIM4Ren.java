@@ -318,13 +318,14 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 			RDFStep[] pname_path = { new RDFStep(ifcOWL.getName_IfcRoot()), new RDFStep(ifcOWL.getHasString()) };
 
-			if (RDFUtils.pathQuery(propertyset, pname_path).get(0).isLiteral()
-					&& RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString().startsWith("Pset")) {
+//			if (RDFUtils.pathQuery(propertyset, pname_path).get(0).isLiteral()
+//					&& RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString().startsWith("Pset")) 
+			{
 				String psetName = RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString();
 
 				final List<RDFNode> propertyset_name = new ArrayList<>();
 				RDFUtils.pathQuery(propertyset, pname_path).forEach(name -> propertyset_name.add(name));
-
+				System.out.println("pset: "+propertyset);
 				RDFStep[] path = { new RDFStep(ifcOWL.getHasProperties_IfcPropertySet()) };
 				RDFUtils.pathQuery(propertyset, path).forEach(propertySingleValue -> {
 
@@ -385,7 +386,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 						ps.putPnameType(pname.toString(), ptype);
 					}
 
-					if (property_value.size() > 0) {
+					if (property_value.size() > 0) {						
 						RDFNode pvalue = property_value.get(0);
 						if (!pname.toString().equals(pvalue.toString())) {
 							if (pvalue.toString().trim().length() > 0) {

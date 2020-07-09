@@ -120,6 +120,7 @@ public class PropertySet_SMLS {
 	Set<String> hashes = new HashSet<>();
 
 	public void connect(Resource lbd_resource, String long_guid) {
+
 		if (hashes.add(lbd_resource.getURI()))
 			for (String pname : this.mapPnameValue.keySet()) {
 				Property property = lbd_resource.getModel().createProperty(LBD_NS.PROPS_NS.props_ns + pname);

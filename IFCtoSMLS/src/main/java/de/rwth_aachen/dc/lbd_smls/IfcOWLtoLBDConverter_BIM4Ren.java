@@ -290,8 +290,9 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 			RDFStep[] pname_path = { new RDFStep(ifcOWL.getName_IfcRoot()), new RDFStep(ifcOWL.getHasString()) };
 
-			if (RDFUtils.pathQuery(propertyset, pname_path).get(0).isLiteral()
-					&& RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString().startsWith("Pset")) {
+//			if (RDFUtils.pathQuery(propertyset, pname_path).get(0).isLiteral()
+//					&& RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString().startsWith("Pset")) 
+			{
 				String psetName = RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString();
 
 				final List<RDFNode> propertyset_name = new ArrayList<>();
@@ -372,9 +373,10 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 							}
 						}
 					} else {
-						ps.putPnameValue(pname.toString(), propertySingleValue);
-						ps.putPsetPropertyRef(pname);
-						RDFUtils.copyTriples(0, propertySingleValue, lbd_general_output_model);
+						System.err.println("!! "+propertySingleValue);
+						//ps.putPnameValue(pname.toString(), propertySingleValue);
+						//ps.putPsetPropertyRef(pname);
+						//RDFUtils.copyTriples(0, propertySingleValue, lbd_general_output_model);
 					}
 
 				});
