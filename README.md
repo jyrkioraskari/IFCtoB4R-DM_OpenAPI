@@ -6,6 +6,10 @@ An Restful OpenAPI implementation for IFCtoLBD converter.
 A test installation:
 http://lbd.arch.rwth-aachen.de/IFCtoLBD_OpenAPI/apidocs/
 
+## Swagger.json description of the services
+
+http://lbd.arch.rwth-aachen.de/IFCtoLBD_OpenAPI/apidocs/ui/swagger.json
+
 ## Changes
 - IFCtoLBD was added. BOT+SMLS has a separate REST interface 
 - BIMserver integration is functional. Some beta testing is still needed.
