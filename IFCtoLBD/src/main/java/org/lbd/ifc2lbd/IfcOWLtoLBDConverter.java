@@ -149,12 +149,9 @@ public class IfcOWLtoLBDConverter {
 	public Model convert(String ifc_filename, String target_file) {
 
 		boolean hasBuildingElements = true;
-		boolean hasSeparateBuildingElementsModel = false;
 		boolean hasBuildingProperties = true;
-		boolean hasSeparatePropertiesModel = false;
 		boolean hasGeolocation = true;
-		convert(ifc_filename, target_file, hasBuildingElements, hasSeparateBuildingElementsModel, hasBuildingProperties,
-				hasSeparatePropertiesModel, hasGeolocation);
+		convert(ifc_filename, target_file, hasBuildingElements, hasBuildingProperties, hasGeolocation);
 		return lbd_general_output_model;
 	}
 
@@ -167,12 +164,9 @@ public class IfcOWLtoLBDConverter {
 	public Model convert(String ifcowl_filename) {
 
 		boolean hasBuildingElements = true;
-		boolean hasSeparateBuildingElementsModel = false;
 		boolean hasBuildingProperties = true;
-		boolean hasSeparatePropertiesModel = false;
 		boolean hasGeolocation = true;
-		convert(ifcowl_filename, null, hasBuildingElements, hasSeparateBuildingElementsModel, hasBuildingProperties,
-				hasSeparatePropertiesModel, hasGeolocation);
+		convert(ifcowl_filename, null, hasBuildingElements, hasBuildingProperties, hasGeolocation);
 		return lbd_general_output_model;
 	}
 
@@ -197,8 +191,7 @@ public class IfcOWLtoLBDConverter {
 	 * @return The model as a Jena-model
 	 */
 	public Model convert(String ifcowl_filename, String target_file, boolean hasBuildingElements,
-			boolean hasSeparateBuildingElementsModel, boolean hasBuildingProperties, boolean hasSeparatePropertiesModel,
-			boolean hasGeolocation) {
+			boolean hasBuildingProperties, boolean hasGeolocation) {
 		ifcowl_model = readIFCOWl(ifcowl_filename); // Before: readInOntologies(ifc_filename);
 
 		eventBus.post(new SystemStatusEvent("Reading in ontologies"));
@@ -227,26 +220,25 @@ public class IfcOWLtoLBDConverter {
 			handlePropertySetData(props_level, hasPropertiesBlankNodes);
 		}
 
-		conversion(target_file, hasBuildingElements, hasSeparateBuildingElementsModel, hasBuildingProperties,
-				hasSeparatePropertiesModel, hasGeolocation);
+		conversion(target_file, hasBuildingElements, hasBuildingProperties, hasGeolocation);
 		return lbd_general_output_model;
 
 	}
 
-	private void conversion(String target_file, boolean hasBuildingElements, boolean hasSeparateBuildingElementsModel,
-			boolean hasBuildingProperties, boolean hasSeparatePropertiesModel, boolean hasGeolocation) {
+	private void conversion(String target_file, boolean hasBuildingElements, boolean hasBuildingProperties,
+			boolean hasGeolocation) {
 
-		List<RDFNode> sites = IfcOWLUtils.listSites(ifcOWL, ifcowl_model,this.lbd_general_output_model);
+		List<RDFNode> sites = IfcOWLUtils.listSites(ifcOWL, ifcowl_model, this.lbd_general_output_model);
 		if (!sites.isEmpty()) {
 			sites.stream().map(rn -> rn.asResource()).forEach(site -> {
 				Resource sio = createformattedURI(site, lbd_general_output_model, "Site");
 				String uncompressed_guid_site = null;
-				String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL,this.lbd_general_output_model);
+				String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL, this.lbd_general_output_model);
 				if (guid_site == null)
 					uncompressed_guid_site = UUID.randomUUID().toString();
 				else
 					uncompressed_guid_site = GuidCompressor.uncompressGuidString(guid_site);
-				final String final_uncompressed_guid_site=uncompressed_guid_site;
+				final String final_uncompressed_guid_site = uncompressed_guid_site;
 				addAttrributes(lbd_property_output_model, site.asResource(), sio);
 
 				sio.addProperty(RDF.type, LBD_NS.BOT.site);
@@ -258,14 +250,16 @@ public class IfcOWLtoLBDConverter {
 					}
 				});
 
-				IfcOWLUtils.listBuildings(site, ifcOWL,this.lbd_general_output_model).stream().map(rn -> rn.asResource()).forEach(building -> {
-					handleBuilding(sio, building);
-				});
+				IfcOWLUtils.listBuildings(site, ifcOWL, this.lbd_general_output_model).stream()
+						.map(rn -> rn.asResource()).forEach(building -> {
+							handleBuilding(sio, building);
+						});
 			});
 		} else {
-			IfcOWLUtils.listBuilding(ifcOWL, ifcowl_model,this.lbd_general_output_model).stream().map(rn -> rn.asResource()).forEach(building -> {
-				handleBuilding(building);
-			});
+			IfcOWLUtils.listBuilding(ifcOWL, ifcowl_model, this.lbd_general_output_model).stream()
+					.map(rn -> rn.asResource()).forEach(building -> {
+						handleBuilding(building);
+					});
 		}
 
 		if (hasGeolocation) {
@@ -277,30 +271,16 @@ public class IfcOWLtoLBDConverter {
 			}
 		}
 
-		if (target_file != null) {
-			if (hasBuildingElements) {
-				if (hasSeparateBuildingElementsModel) {
-					String out_products_filename = target_file.substring(0, target_file.lastIndexOf("."))
-							+ "_building_elements.ttl";
-					RDFUtils.writeModel(lbd_product_output_model, out_products_filename, this.eventBus);
-					eventBus.post(new SystemStatusEvent("Building elements file is: " + out_products_filename));
-				} else
-					lbd_general_output_model.add(lbd_product_output_model);
-			}
-
-			if (hasBuildingProperties) {
-				if (hasSeparatePropertiesModel) {
-					String out_properties_filename = target_file.substring(0, target_file.lastIndexOf("."))
-							+ "_element_properties.ttl";
-					RDFUtils.writeModel(lbd_property_output_model, out_properties_filename, this.eventBus);
-					eventBus.post(
-							new SystemStatusEvent("Building elements properties file is: " + out_properties_filename));
-				} else
-					lbd_general_output_model.add(lbd_property_output_model);
-			}
-			RDFUtils.writeModel(lbd_general_output_model, target_file, this.eventBus);
-			eventBus.post(new SystemStatusEvent("Done. Linked Building Data File is: " + target_file));
+		if (hasBuildingElements) {
+			System.out.println("Building elements");
+			lbd_general_output_model.add(lbd_product_output_model);
 		}
+
+		if (hasBuildingProperties) {
+			System.out.println("Building properties");
+			lbd_general_output_model.add(lbd_property_output_model);
+		}
+		eventBus.post(new SystemStatusEvent("Done. Linked Building Data File is: " + target_file));
 	}
 
 	private void handleBuilding(Resource ifcowl_building) {
@@ -313,7 +293,7 @@ public class IfcOWLtoLBDConverter {
 			return;
 		}
 		Resource bo = createformattedURI(ifcowl_building, lbd_general_output_model, "Building");
-		String guid_building = IfcOWLUtils.getGUID(ifcowl_building, this.ifcOWL,this.lbd_general_output_model);
+		String guid_building = IfcOWLUtils.getGUID(ifcowl_building, this.ifcOWL, this.lbd_general_output_model);
 		String uncompressed_guid_building = GuidCompressor.uncompressGuidString(guid_building);
 		addAttrributes(lbd_property_output_model, ifcowl_building, bo);
 
@@ -329,64 +309,67 @@ public class IfcOWLtoLBDConverter {
 					}
 				});
 
-		IfcOWLUtils.listStoreys(ifcowl_building, ifcOWL,this.lbd_general_output_model).stream().map(rn -> rn.asResource()).forEach(storey -> {
-			eventBus.post(new SystemStatusEvent("Storey: " + storey.getLocalName()));
+		IfcOWLUtils.listStoreys(ifcowl_building, ifcOWL, this.lbd_general_output_model).stream()
+				.map(rn -> rn.asResource()).forEach(storey -> {
+					eventBus.post(new SystemStatusEvent("Storey: " + storey.getLocalName()));
 
-			if (!RDFUtils.getType(storey.asResource()).get().getURI().endsWith("#IfcBuildingStorey")) {
-				System.err.println("No an #IfcBuildingStorey");
-				return;
-			}
+					if (!RDFUtils.getType(storey.asResource()).get().getURI().endsWith("#IfcBuildingStorey")) {
+						System.err.println("No an #IfcBuildingStorey");
+						return;
+					}
 
-			Resource so = createformattedURI(storey, lbd_general_output_model, "Storey");
-			String guid_storey = IfcOWLUtils.getGUID(storey, this.ifcOWL,this.lbd_general_output_model);
-			String uncompressed_guid_storey = GuidCompressor.uncompressGuidString(guid_storey);
-			addAttrributes(lbd_property_output_model, storey, so);
+					Resource so = createformattedURI(storey, lbd_general_output_model, "Storey");
+					String guid_storey = IfcOWLUtils.getGUID(storey, this.ifcOWL, this.lbd_general_output_model);
+					String uncompressed_guid_storey = GuidCompressor.uncompressGuidString(guid_storey);
+					addAttrributes(lbd_property_output_model, storey, so);
 
-			bo.addProperty(LBD_NS.BOT.hasStorey, so);
-			so.addProperty(RDF.type, LBD_NS.BOT.storey);
+					bo.addProperty(LBD_NS.BOT.hasStorey, so);
+					so.addProperty(RDF.type, LBD_NS.BOT.storey);
 
-			IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
-				PropertySet p_set = this.propertysets.get(propertyset.getURI());
-				if (p_set != null)
-					p_set.connect(so, uncompressed_guid_storey);
-			});
+					IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource())
+							.forEach(propertyset -> {
+								PropertySet p_set = this.propertysets.get(propertyset.getURI());
+								if (p_set != null)
+									p_set.connect(so, uncompressed_guid_storey);
+							});
 
-			IfcOWLUtils.listContained_StoreyElements(storey, ifcOWL).stream().map(rn -> rn.asResource())
-					.forEach(element -> {
-						if (RDFUtils.getType(element.asResource()).get().getURI().endsWith("#IfcSpace"))
+					IfcOWLUtils.listContained_StoreyElements(storey, ifcOWL).stream().map(rn -> rn.asResource())
+							.forEach(element -> {
+								if (RDFUtils.getType(element.asResource()).get().getURI().endsWith("#IfcSpace"))
+									return;
+								connectElement(so, element);
+							});
+
+					IfcOWLUtils.listStoreySpaces(storey.asResource(), ifcOWL).stream().forEach(space -> {
+						if (!RDFUtils.getType(space.asResource()).get().getURI().endsWith("#IfcSpace"))
 							return;
-						connectElement(so, element);
+						Resource spo = createformattedURI(space.asResource(), lbd_general_output_model, "Space");
+						String guid_space = IfcOWLUtils.getGUID(space.asResource(), this.ifcOWL,
+								this.lbd_general_output_model);
+						String uncompressed_guid_space = GuidCompressor.uncompressGuidString(guid_space);
+						addAttrributes(lbd_property_output_model, space.asResource(), spo);
+
+						so.addProperty(LBD_NS.BOT.hasSpace, spo);
+						spo.addProperty(RDF.type, LBD_NS.BOT.space);
+						IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream()
+								.map(rn -> rn.asResource()).forEach(element -> {
+									connectElement(spo, element);
+								});
+
+						IfcOWLUtils.listAdjacent_SpaceElements(space.asResource(), ifcOWL).stream()
+								.map(rn -> rn.asResource()).forEach(element -> {
+									connectElement(spo, LBD_NS.BOT.adjacentElement, element);
+								});
+
+						IfcOWLUtils.listPropertysets(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
+								.forEach(propertyset -> {
+									PropertySet p_set = this.propertysets.get(propertyset.getURI());
+									if (p_set != null) {
+										p_set.connect(spo, uncompressed_guid_space);
+									}
+								});
 					});
-
-			IfcOWLUtils.listStoreySpaces(storey.asResource(), ifcOWL).stream().forEach(space -> {
-				if (!RDFUtils.getType(space.asResource()).get().getURI().endsWith("#IfcSpace"))
-					return;
-				Resource spo = createformattedURI(space.asResource(), lbd_general_output_model, "Space");
-				String guid_space = IfcOWLUtils.getGUID(space.asResource(), this.ifcOWL,this.lbd_general_output_model);
-				String uncompressed_guid_space = GuidCompressor.uncompressGuidString(guid_space);
-				addAttrributes(lbd_property_output_model, space.asResource(), spo);
-
-				so.addProperty(LBD_NS.BOT.hasSpace, spo);
-				spo.addProperty(RDF.type, LBD_NS.BOT.space);
-				IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
-						.forEach(element -> {
-							connectElement(spo, element);
-						});
-
-				IfcOWLUtils.listAdjacent_SpaceElements(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
-						.forEach(element -> {
-							connectElement(spo, LBD_NS.BOT.adjacentElement, element);
-						});
-
-				IfcOWLUtils.listPropertysets(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
-						.forEach(propertyset -> {
-							PropertySet p_set = this.propertysets.get(propertyset.getURI());
-							if (p_set != null) {
-								p_set.connect(spo, uncompressed_guid_space);
-							}
-						});
-			});
-		});
+				});
 	}
 
 	/**
@@ -412,8 +395,8 @@ public class IfcOWLtoLBDConverter {
 			 * 
 			 */
 
-			System.out.println("included PSET : "
-					+ RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString());
+			System.out.println(
+					"included PSET : " + RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString());
 
 			final List<RDFNode> propertyset_name = new ArrayList<>();
 			RDFUtils.pathQuery(propertyset, pname_path).forEach(name -> propertyset_name.add(name));
@@ -879,6 +862,14 @@ public class IfcOWLtoLBDConverter {
 		String inst_ns = ifc_model.getNsPrefixMap().get("inst");
 		if (inst_ns != null && !this.uriBase.isPresent())
 			this.uriBase = Optional.of(inst_ns);
+
+		if (inst_ns == null)
+			IfcOWLUtils.addError(this.lbd_general_output_model, "No \"inst\" name space.");
+
+		String bot_ns = ifc_model.getNsPrefixMap().get("bot");
+		if (bot_ns != null)
+			IfcOWLUtils.addError(this.lbd_general_output_model, "BOT files are not converted into BOT.");
+
 		String ifcowl_ns = ifc_model.getNsPrefixMap().get("ifcowl");
 		if (ifcowl_ns != null) {
 			if (ifcowl_ns.toLowerCase().contains("ifc2x3")) {

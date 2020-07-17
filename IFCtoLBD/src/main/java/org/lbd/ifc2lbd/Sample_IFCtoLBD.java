@@ -29,7 +29,7 @@ public class Sample_IFCtoLBD {
 					+ ".ttl";
 
 			new IFCtoLBDConverter(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset#", outputFile,
-					0, true, false, true, false, false, false);
+					3, true, false, true, false, false, false);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

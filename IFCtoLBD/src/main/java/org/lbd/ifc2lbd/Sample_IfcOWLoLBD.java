@@ -11,6 +11,7 @@ import org.apache.jena.riot.Lang;
 public class Sample_IfcOWLoLBD {
 	public static void main(String[] args) {
 		String ifcOwlFileName = "c:\\test\\bim4ren\\n1\\BIM4REN_DUNAN_20200716_IfcSite_added.ttl";
+		//String ifcOwlFileName = "c:\\test\\bim4ren\\n1\\LibertyLoft_BOT.ttl";
 		//String ifcOwlFileName = "c:\\ifc2\\Barcelona_Pavilion.ttl";
 		File ifcOwlFile = new File(ifcOwlFileName);
 		try {
@@ -24,7 +25,7 @@ public class Sample_IfcOWLoLBD {
 			String outputFile = tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().length() - 4)
 					+ ".ttl";
 			System.out.println("outputfile: "+outputFile);
-			IfcOWLtoLBDConverter converter=new IfcOWLtoLBDConverter(false, 0);
+			IfcOWLtoLBDConverter converter=new IfcOWLtoLBDConverter(false, 3);
 			
 			Model m=converter.convert(ifcOwlFile.getAbsolutePath());
 			m.write(System.out, "TTL");

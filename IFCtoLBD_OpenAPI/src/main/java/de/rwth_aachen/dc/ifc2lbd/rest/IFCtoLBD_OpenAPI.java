@@ -76,6 +76,7 @@ public class IFCtoLBD_OpenAPI {
 //	}
 
 	/**
+     * General IFCtoLBD OPM Level 3  
 	 * Converts an IFC file into into the Linked Building Data  (BOT
 	 * https://w3c-lbd-cg.github.io/bot/)
 	 * 
@@ -117,6 +118,7 @@ public class IFCtoLBD_OpenAPI {
 	}
 
 	/**
+     * General IfcOwltoLBD OPM Level 3  
 	 * Converts an IfcOWL file into into the Linked Building Data RDF (BOT
 	 * https://w3c-lbd-cg.github.io/bot/)
 	 * 
@@ -161,13 +163,17 @@ public class IFCtoLBD_OpenAPI {
 	
 
 	/**
+	 * IFCtoLBD for BIM4Ren  
 	 * Converts an IFC file into into the Linked Building Data RDF (BOT+SMLS)
+	 * 
+	 * https://bim4ren.eu/
+	 * 
 	 *  + Geometry:  Bounding Boxes
 	 * @param ifcFile an IFC file
 	 * @return JSONLD formatted output
 	 */
 	@POST
-	@Path("/convertIFCtoSMLS")
+	@Path("/convertIFCtoLBD_for_BIM4Ren")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces({"text/turtle", "application/ld+json", "application/rdf+xml"})
 	public Response convertIFCtoSMLS(@HeaderParam(HttpHeaders.ACCEPT) String accept_type,
@@ -205,13 +211,16 @@ public class IFCtoLBD_OpenAPI {
 	
 	
 	/**
+	 * IfcOWLtoLBD for BIM4Ren  
 	 * Converts an IfcOWL file into into the Linked Building Data RDF ((BOT+SMLS)
+	 * 
+	 * https://bim4ren.eu/
 	 * 
 	 * @param ifcOWLFile an IfcOWL TTL formatted file
 	 * @return Returnd RDF output. Formats are:  JSON-LD,  RDF/XML, and TTL
 	 */
 	@POST
-	@Path("/convertIfcOWLtoSMLS")
+	@Path("/convertIfcOWtoLBD_for_BIM4Ren")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces({"text/turtle", "application/ld+json", "application/rdf+xml"})
 	public Response convertIfcOWLtoSMLS(@HeaderParam(HttpHeaders.ACCEPT) String accept_type, @FormDataParam("ifcOWLFile") InputStream ifcOWLFile) {

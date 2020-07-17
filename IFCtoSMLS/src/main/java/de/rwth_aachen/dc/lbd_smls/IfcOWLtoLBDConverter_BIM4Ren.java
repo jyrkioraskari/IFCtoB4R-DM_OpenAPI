@@ -104,10 +104,11 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 		ifcowl_model = readIFCOWl(ifcowl_filename); // Before: readInOntologies(ifc_filename);
 
+		this.lbd_general_output_model = ModelFactory.createDefaultModel();
+
 		readInOntologies(ifcowl_model);
 		createIfcLBDProductMapping();
 
-		this.lbd_general_output_model = ModelFactory.createDefaultModel();
 
 		if (!uriBase.isPresent())
 			uriBase = Optional.of("https://dc.rwth-aachen.de/IFCtoLBDset#");
@@ -706,6 +707,11 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 				if (!product_BE_ontology_statement.getObject().isResource())
 					continue;
 				Resource ifcowl_class = product_BE_ontology_statement.getObject().asResource();
+				if(!this.ontURI.isPresent())
+				{
+					IfcOWLUtils.addError(this.lbd_general_output_model, "No base URI present.");
+					return;
+				}
 				Resource mapped_ifcowl_class = ontology_model
 						.getResource(this.ontURI.get() + "#" + ifcowl_class.getLocalName());
 				StmtIterator subclass_statement_iterator = ontology_model
@@ -863,6 +869,13 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 		String inst_ns = ifc_model.getNsPrefixMap().get("inst");
 		if (inst_ns != null && !this.uriBase.isPresent())
 			this.uriBase = Optional.of(inst_ns);
+		if (inst_ns == null)
+			IfcOWLUtils.addError(this.lbd_general_output_model, "No \"inst\" name space.");
+		
+		String bot_ns = ifc_model.getNsPrefixMap().get("bot");
+		if (bot_ns != null)
+			IfcOWLUtils.addError(this.lbd_general_output_model, "BOT files are not converted into BOT.");
+		
 		String ifcowl_ns = ifc_model.getNsPrefixMap().get("ifcowl");
 		if (ifcowl_ns != null) {
 			if (ifcowl_ns.toLowerCase().contains("ifc2x3")) {

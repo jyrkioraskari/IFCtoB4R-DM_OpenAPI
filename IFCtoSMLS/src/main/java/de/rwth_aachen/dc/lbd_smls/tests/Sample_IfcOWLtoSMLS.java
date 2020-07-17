@@ -34,7 +34,7 @@ public class  Sample_IfcOWLtoSMLS{
 	
 	
 	public static void main(String[] args) {
-		String ifcOwlFileName = "c:\\test\\bim4ren\\n1\\BIM4REN_DUNAN_20200716_IfcSite_added.ttl";
+		String ifcOwlFileName = "c:\\test\\bim4ren\\n1\\LibertyLoft_BOT.ttl";
 		//String ifcFileName = "c:\\ifc2\\Barcelona_Pavilion.ttl";
 		File ifcOwlFile = new File(ifcOwlFileName);
 		StringBuilder result_string=new StringBuilder();

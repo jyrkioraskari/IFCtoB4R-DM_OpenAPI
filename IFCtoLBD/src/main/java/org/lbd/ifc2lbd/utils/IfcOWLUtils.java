@@ -459,7 +459,7 @@ public class IfcOWLUtils {
 	}
 
 	
-	private static void addError(Model lbd_general_output_model4_errors,String error_text)
+	public static void addError(Model lbd_general_output_model4_errors,String error_text)
 	{
 		Resource r=lbd_general_output_model4_errors.createResource();
 		Property ep=lbd_general_output_model4_errors.createProperty("https://dc.rwth-aachen.de/LBD#model_error");
