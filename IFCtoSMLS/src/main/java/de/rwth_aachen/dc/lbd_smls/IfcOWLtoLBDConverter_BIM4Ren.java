@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
@@ -134,15 +135,21 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 			sites.stream().map(rn -> rn.asResource()).forEach(site -> {
 				Resource sio = createformattedURI(site, lbd_general_output_model, "Site");
 				String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL);
-				String uncompressed_guid_site = GuidCompressor.uncompressGuidString(guid_site);
+				String uncompressed_guid_site = null;
+				if (guid_site == null)
+					uncompressed_guid_site = UUID.randomUUID().toString();
+				else
+					uncompressed_guid_site = GuidCompressor.uncompressGuidString(guid_site);
+				final String final_uncompressed_guid_site=uncompressed_guid_site;
 				addAttrributes(lbd_general_output_model, site.asResource(), sio);
 
 				sio.addProperty(RDF.type, LBD_NS.BOT.site);
 
+				
 				IfcOWLUtils.listPropertysets(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
 					PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
 					if (p_set != null) {
-						p_set.connect(sio, uncompressed_guid_site);
+						p_set.connect(sio, final_uncompressed_guid_site);
 					}
 				});
 
@@ -322,7 +329,6 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 					RDFUtils.pathQuery(propertySingleValue.asResource(), value_pathS)
 							.forEach(value -> property_value.add(value));
 
-
 					RDFStep[] value_pathD = { new RDFStep(ifcOWL.getNominalValue_IfcPropertySingleValue()),
 							new RDFStep(ifcOWL.getHasDouble()) };
 					RDFUtils.pathQuery(propertySingleValue.asResource(), value_pathD)
@@ -374,11 +380,11 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 							}
 						}
 					} else {
-						System.err.println("!! "+propertySingleValue);
+						System.err.println("!! " + propertySingleValue);
 						System.err.println("Broken ifcOWL file!");
-						//ps.putPnameValue(pname.toString(), propertySingleValue);
-						//ps.putPsetPropertyRef(pname);
-						//RDFUtils.copyTriples(0, propertySingleValue, lbd_general_output_model);
+						// ps.putPnameValue(pname.toString(), propertySingleValue);
+						// ps.putPsetPropertyRef(pname);
+						// RDFUtils.copyTriples(0, propertySingleValue, lbd_general_output_model);
 					}
 
 				});
@@ -528,7 +534,11 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 		if (!handledSttributes4resource.add(r)) // Tests if the attributes are added already
 			return;
 		String guid = IfcOWLUtils.getGUID(r, this.ifcOWL);
-		String uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
+		String uncompressed_guid = null;
+		if (guid == null)
+			uncompressed_guid = UUID.randomUUID().toString();
+		else
+			uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
 		final AttributeSet_SMLS connected_attributes = new AttributeSet_SMLS(this.uriBase.get(), output_model,
 				this.unitmap);
 		r.listProperties().forEachRemaining(s -> {

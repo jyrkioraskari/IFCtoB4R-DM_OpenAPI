@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
@@ -239,8 +240,13 @@ public class IfcOWLtoLBDConverter {
 		if (!sites.isEmpty()) {
 			sites.stream().map(rn -> rn.asResource()).forEach(site -> {
 				Resource sio = createformattedURI(site, lbd_general_output_model, "Site");
-				String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL);
-				String uncompressed_guid_site = GuidCompressor.uncompressGuidString(guid_site);
+				String uncompressed_guid_site = null;
+				String guid_site=null;
+				if (guid_site == null)
+					uncompressed_guid_site = UUID.randomUUID().toString();
+				else
+					uncompressed_guid_site = GuidCompressor.uncompressGuidString(guid_site);
+				final String final_uncompressed_guid_site=uncompressed_guid_site;
 				addAttrributes(lbd_property_output_model, site.asResource(), sio);
 
 				sio.addProperty(RDF.type, LBD_NS.BOT.site);
@@ -248,7 +254,7 @@ public class IfcOWLtoLBDConverter {
 				IfcOWLUtils.listPropertysets(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
 					PropertySet p_set = this.propertysets.get(propertyset.getURI());
 					if (p_set != null) {
-						p_set.connect(sio, uncompressed_guid_site);
+						p_set.connect(sio, final_uncompressed_guid_site);
 					}
 				});
 
@@ -638,7 +644,11 @@ public class IfcOWLtoLBDConverter {
 		if (!handledSttributes4resource.add(r)) // Tests if the attributes are added already
 			return;
 		String guid = IfcOWLUtils.getGUID(r, this.ifcOWL);
-		String uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
+		String uncompressed_guid = null;
+		if (guid == null)
+			uncompressed_guid = UUID.randomUUID().toString();
+		else
+			uncompressed_guid = GuidCompressor.uncompressGuidString(guid);
 		final AttributeSet connected_attributes = new AttributeSet(this.uriBase.get(), output_model, this.props_level,
 				hasPropertiesBlankNodes);
 		r.listProperties().forEachRemaining(s -> {

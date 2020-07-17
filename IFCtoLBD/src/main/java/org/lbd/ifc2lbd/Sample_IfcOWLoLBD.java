@@ -10,7 +10,7 @@ import org.apache.jena.riot.Lang;
 
 public class Sample_IfcOWLoLBD {
 	public static void main(String[] args) {
-		String ifcOwlFileName = "c:\\test\\bim4ren\\BIM4REN_DUNAN_20200706.ttl";
+		String ifcOwlFileName = "c:\\test\\bim4ren\\n1\\BIM4REN_DUNAN_20200716_IfcSite_added.ttl";
 		//String ifcOwlFileName = "c:\\ifc2\\Barcelona_Pavilion.ttl";
 		File ifcOwlFile = new File(ifcOwlFileName);
 		try {
