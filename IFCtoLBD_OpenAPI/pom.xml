@@ -133,12 +133,12 @@
 		<dependency>
 			<groupId>de.rwth-aachen.dc.ifctolbd</groupId>
 			<artifactId>IFCtoSMLS</artifactId>
-			<version>1.03</version>
+			<version>1.04</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.jyrkioraskari</groupId>
 			<artifactId>IFCtoLBD</artifactId>
-			<version>1.92-snapshot</version>
+			<version>1.93-snapshot</version>
 		</dependency>
 		
 				<!-- https://mvnrepository.com/artifact/org.apache.jena/apache-jena-libs -->
