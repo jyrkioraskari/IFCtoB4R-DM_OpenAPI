@@ -236,12 +236,12 @@ public class IfcOWLtoLBDConverter {
 	private void conversion(String target_file, boolean hasBuildingElements, boolean hasSeparateBuildingElementsModel,
 			boolean hasBuildingProperties, boolean hasSeparatePropertiesModel, boolean hasGeolocation) {
 
-		List<RDFNode> sites = IfcOWLUtils.listSites(ifcOWL, ifcowl_model);
+		List<RDFNode> sites = IfcOWLUtils.listSites(ifcOWL, ifcowl_model,this.lbd_general_output_model);
 		if (!sites.isEmpty()) {
 			sites.stream().map(rn -> rn.asResource()).forEach(site -> {
 				Resource sio = createformattedURI(site, lbd_general_output_model, "Site");
 				String uncompressed_guid_site = null;
-				String guid_site=null;
+				String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL,this.lbd_general_output_model);
 				if (guid_site == null)
 					uncompressed_guid_site = UUID.randomUUID().toString();
 				else
@@ -258,12 +258,12 @@ public class IfcOWLtoLBDConverter {
 					}
 				});
 
-				IfcOWLUtils.listBuildings(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(building -> {
+				IfcOWLUtils.listBuildings(site, ifcOWL,this.lbd_general_output_model).stream().map(rn -> rn.asResource()).forEach(building -> {
 					handleBuilding(sio, building);
 				});
 			});
 		} else {
-			IfcOWLUtils.listBuilding(ifcOWL, ifcowl_model).stream().map(rn -> rn.asResource()).forEach(building -> {
+			IfcOWLUtils.listBuilding(ifcOWL, ifcowl_model,this.lbd_general_output_model).stream().map(rn -> rn.asResource()).forEach(building -> {
 				handleBuilding(building);
 			});
 		}
@@ -313,7 +313,7 @@ public class IfcOWLtoLBDConverter {
 			return;
 		}
 		Resource bo = createformattedURI(ifcowl_building, lbd_general_output_model, "Building");
-		String guid_building = IfcOWLUtils.getGUID(ifcowl_building, this.ifcOWL);
+		String guid_building = IfcOWLUtils.getGUID(ifcowl_building, this.ifcOWL,this.lbd_general_output_model);
 		String uncompressed_guid_building = GuidCompressor.uncompressGuidString(guid_building);
 		addAttrributes(lbd_property_output_model, ifcowl_building, bo);
 
@@ -329,7 +329,7 @@ public class IfcOWLtoLBDConverter {
 					}
 				});
 
-		IfcOWLUtils.listStoreys(ifcowl_building, ifcOWL).stream().map(rn -> rn.asResource()).forEach(storey -> {
+		IfcOWLUtils.listStoreys(ifcowl_building, ifcOWL,this.lbd_general_output_model).stream().map(rn -> rn.asResource()).forEach(storey -> {
 			eventBus.post(new SystemStatusEvent("Storey: " + storey.getLocalName()));
 
 			if (!RDFUtils.getType(storey.asResource()).get().getURI().endsWith("#IfcBuildingStorey")) {
@@ -338,7 +338,7 @@ public class IfcOWLtoLBDConverter {
 			}
 
 			Resource so = createformattedURI(storey, lbd_general_output_model, "Storey");
-			String guid_storey = IfcOWLUtils.getGUID(storey, this.ifcOWL);
+			String guid_storey = IfcOWLUtils.getGUID(storey, this.ifcOWL,this.lbd_general_output_model);
 			String uncompressed_guid_storey = GuidCompressor.uncompressGuidString(guid_storey);
 			addAttrributes(lbd_property_output_model, storey, so);
 
@@ -362,7 +362,7 @@ public class IfcOWLtoLBDConverter {
 				if (!RDFUtils.getType(space.asResource()).get().getURI().endsWith("#IfcSpace"))
 					return;
 				Resource spo = createformattedURI(space.asResource(), lbd_general_output_model, "Space");
-				String guid_space = IfcOWLUtils.getGUID(space.asResource(), this.ifcOWL);
+				String guid_space = IfcOWLUtils.getGUID(space.asResource(), this.ifcOWL,this.lbd_general_output_model);
 				String uncompressed_guid_space = GuidCompressor.uncompressGuidString(guid_space);
 				addAttrributes(lbd_property_output_model, space.asResource(), spo);
 

@@ -1,5 +1,5 @@
 # IFCtoLBD_OpenAPI
-Version 1.04
+Version 1.05
 
 An Restful OpenAPI implementation for IFCtoLBD converter.  
 

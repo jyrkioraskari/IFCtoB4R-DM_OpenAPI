@@ -10,7 +10,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.Statement;
@@ -24,7 +26,7 @@ import org.lbd.ifc2lbd.utils.rdfpath.RDFStep;
 import com.buildingsmart.tech.ifcowl.IfcSpfReader;
 
 /*
- *  Copyright (c) 2017 Jyrki Oraskari (Jyrki.Oraskari@gmail.f)
+ *  Copyright (c) 2017, 2020 Jyrki Oraskari (Jyrki.Oraskari@gmail.f)
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +52,17 @@ public class IfcOWLUtils {
 		}
 		return null;
 	}
+	public static String getGUID(Resource r, IfcOWLNameSpace ifcOWL, Model lbd_general_output_model4_errors) {
+		StmtIterator i = r.listProperties(ifcOWL.getGuid());
+		if (i.hasNext()) {
+			Statement s = i.next();
+			String guid = s.getObject().asResource().getProperty(ifcOWL.getHasString()).getObject().asLiteral()
+					.getLexicalForm();
+			return guid;
+		}
+		addError(lbd_general_output_model4_errors,r+" is missing: "+ifcOWL.getGuid()+" + "+ifcOWL.getHasString());	
+		return null;
+	}
 
 	// Solution proposed by Simon Steyskal 2018
 	private static RDFStep[] getNextLevelPath(IfcOWLNameSpace ifcOWL) {
@@ -69,9 +82,33 @@ public class IfcOWLUtils {
 		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcSite()), path);
 	}
 	
+	
+	public static List<RDFNode> listSites(IfcOWLNameSpace ifcOWL, Model ifcowl_model,Model lbd_general_output_model4_errors ) {
+		RDFStep[] path = { new InvRDFStep(RDF.type) };
+		List<RDFNode> ret= RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcSite()), path);
+		if(ret==null)
+		{
+			addError(lbd_general_output_model4_errors,"model is missing an "+ifcOWL.getIfcSite());	
+		}
+		return ret;
+	}
+
+
+	
 	public static List<RDFNode> listBuilding(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
 		RDFStep[] path = { new InvRDFStep(RDF.type) };
 		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcBuilding()), path);
+	}
+	
+	public static List<RDFNode> listBuilding(IfcOWLNameSpace ifcOWL, Model ifcowl_model,Model lbd_general_output_model4_errors ) {
+		RDFStep[] path = { new InvRDFStep(RDF.type) };
+		List<RDFNode> ret=RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcBuilding()), path);
+		
+		if(ret==null)
+		{
+			addError(lbd_general_output_model4_errors,"model is missing an "+ifcOWL.getIfcBuilding());	
+		}
+		return ret;
 	}
 
 	/**
@@ -89,6 +126,18 @@ public class IfcOWLUtils {
 		return buildings;
 	}
 
+	
+	public static List<RDFNode> listBuildings(Resource site, IfcOWLNameSpace ifcOWL,Model lbd_general_output_model4_errors) {
+		// System.out.println("Site: "+site.toString());
+		List<RDFNode> buildings = RDFUtils.pathQuery(site, getNextLevelPath(ifcOWL));
+		if (buildings == null || buildings.size() == 0)
+		{
+			System.err.println("No Buildings!");
+			addError(lbd_general_output_model4_errors,"Model has no buildings");	
+		}
+		return buildings;
+	}
+	
 	/**
 	 * 
 	 * @param building Apache Jena Resource RDF node that refers to an #IfcBuilding
@@ -100,6 +149,15 @@ public class IfcOWLUtils {
 
 	public static List<RDFNode> listStoreys(Resource building, IfcOWLNameSpace ifcOWL) {
 		return RDFUtils.pathQuery(building, getNextLevelPath(ifcOWL));
+	}
+	
+	public static List<RDFNode> listStoreys(Resource building, IfcOWLNameSpace ifcOWL,Model lbd_general_output_model4_errors) {
+		List<RDFNode> ret=RDFUtils.pathQuery(building, getNextLevelPath(ifcOWL));
+		if(ret==null)
+		{
+			addError(lbd_general_output_model4_errors,"model is missing ifcStorey elements");	
+		}
+		return ret;
 	}
 
 	/**
@@ -401,5 +459,11 @@ public class IfcOWLUtils {
 	}
 
 	
-
+	private static void addError(Model lbd_general_output_model4_errors,String error_text)
+	{
+		Resource r=lbd_general_output_model4_errors.createResource();
+		Property ep=lbd_general_output_model4_errors.createProperty("https://dc.rwth-aachen.de/LBD#model_error");
+	    Literal  el=lbd_general_output_model4_errors.createLiteral(error_text);
+		r.addLiteral(ep, el);
+	}
  }

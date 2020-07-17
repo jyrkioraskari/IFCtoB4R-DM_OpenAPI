@@ -194,7 +194,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 							}
 						});
 
-				IfcOWLUtils.listStoreys(building, ifcOWL).stream().map(rn -> rn.asResource()).forEach(storey -> {
+				IfcOWLUtils.listStoreys(building, ifcOWL,this.lbd_general_output_model).stream().map(rn -> rn.asResource()).forEach(storey -> {
 
 					if (!RDFUtils.getType(storey.asResource()).get().getURI().endsWith("#IfcBuildingStorey")) {
 						System.err.println("No an #IfcBuildingStorey");
