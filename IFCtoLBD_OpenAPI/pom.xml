@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.rwth-aachen.dc.ifctolbd</groupId>
 	<artifactId>IFCtoLBD_OpenAPI</artifactId>
-	<version>1.07</version>
+	<version>1.09</version>
 	<packaging>war</packaging>
 	<name>IFCtoLBD OpenAPI Interface</name>
 
@@ -133,12 +133,12 @@
 		<dependency>
 			<groupId>de.rwth-aachen.dc.ifctolbd</groupId>
 			<artifactId>IFCtoSMLS</artifactId>
-			<version>1.07</version>
+			<version>1.09</version>
 		</dependency>
 		<dependency>
 			<groupId>io.github.jyrkioraskari</groupId>
 			<artifactId>IFCtoLBD</artifactId>
-			<version>1.97-snapshot</version>
+			<version>1.98-snapshot</version>
 		</dependency>
 		
 				<!-- https://mvnrepository.com/artifact/org.apache.jena/apache-jena-libs -->
