@@ -16,16 +16,16 @@ http://lbd.arch.rwth-aachen.de/IFCtoLBD_OpenAPI/apidocs/ui/swagger.json
 
 ## Cite this
 ```
-@software{jyrki_oraskari_2020_3924686,
+@software{jyrki_oraskari_2020_3991736,
   author       = {Jyrki Oraskari},
   title        = {{jyrkioraskari/IFCtoLBD\_OpenAPI: Restful API for 
-                   IFCtoLBD version 1.01}},
-  month        = jun,
+                   IFCtoLBD version 1.09}},
+  month        = aug,
   year         = 2020,
   publisher    = {Zenodo},
-  version      = {1.01},
-  doi          = {10.5281/zenodo.3924686},
-  url          = {https://doi.org/10.5281/zenodo.3924686}
+  version      = {1.09},
+  doi          = {10.5281/zenodo.3991736},
+  url          = {https://doi.org/10.5281/zenodo.3991736}
 }
 ```
 
