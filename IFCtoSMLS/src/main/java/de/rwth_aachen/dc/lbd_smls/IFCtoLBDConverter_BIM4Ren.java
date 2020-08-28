@@ -35,9 +35,9 @@ import org.apache.jena.vocabulary.RDFS;
 import org.bimserver.plugins.deserializers.DeserializeException;
 import org.bimserver.plugins.renderengine.RenderEngineException;
 
-import com.buildingsmart.tech.ifcowl.IfcSpfReader;
 import com.openifctools.guidcompressor.GuidCompressor;
 
+import be.ugent.IfcSpfReader;
 import de.rwth_aachen.dc.lbd.IFCBoundingBoxes;
 import de.rwth_aachen.dc.lbd_smls.geo.IFC_Geolocation;
 import de.rwth_aachen.dc.lbd_smls.geo.WktLiteral;

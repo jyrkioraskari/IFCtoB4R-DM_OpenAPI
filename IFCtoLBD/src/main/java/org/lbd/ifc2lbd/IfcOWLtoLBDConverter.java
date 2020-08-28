@@ -27,9 +27,10 @@ import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
+import org.lbd.ifc2lbd.application_messaging.IFC2LBD_ApplicationEventBusService;
+import org.lbd.ifc2lbd.application_messaging.events.IFCtoLBD_SystemStatusEvent;
 import org.lbd.ifc2lbd.geo.IFC_Geolocation;
 import org.lbd.ifc2lbd.geo.WktLiteral;
-import org.lbd.ifc2lbd.messages.SystemStatusEvent;
 import org.lbd.ifc2lbd.ns.IfcOWLNameSpace;
 import org.lbd.ifc2lbd.ns.LBD_NS;
 import org.lbd.ifc2lbd.ns.OPM;
@@ -58,7 +59,7 @@ import com.openifctools.guidcompressor.GuidCompressor;
  */
 
 public class IfcOWLtoLBDConverter {
-	private final EventBus eventBus = EventBusService.getEventBus();
+	private final EventBus eventBus = IFC2LBD_ApplicationEventBusService.getEventBus();
 	private Model ifcowl_model;
 	private Model ontology_model = null;
 	private Map<String, List<Resource>> ifcowl_product_map = new HashMap<>();
@@ -96,7 +97,7 @@ public class IfcOWLtoLBDConverter {
 
 		System.out.println("Conversion starts");
 		ontology_model = ModelFactory.createDefaultModel();
-		eventBus.post(new SystemStatusEvent("IFCtoRDF conversion"));
+		eventBus.post(new IFCtoLBD_SystemStatusEvent("IFCtoRDF conversion"));
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
 		this.lbd_product_output_model = ModelFactory.createDefaultModel();
@@ -129,7 +130,7 @@ public class IfcOWLtoLBDConverter {
 		this.uriBase = Optional.of(uriBase);
 		System.out.println("Conversion starts");
 		ontology_model = ModelFactory.createDefaultModel();
-		eventBus.post(new SystemStatusEvent("IFCtoRDF conversion"));
+		eventBus.post(new IFCtoLBD_SystemStatusEvent("IFCtoRDF conversion"));
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
 		this.lbd_product_output_model = ModelFactory.createDefaultModel();
@@ -194,7 +195,7 @@ public class IfcOWLtoLBDConverter {
 			boolean hasBuildingProperties, boolean hasGeolocation) {
 		ifcowl_model = readIFCOWl(ifcowl_filename); // Before: readInOntologies(ifc_filename);
 
-		eventBus.post(new SystemStatusEvent("Reading in ontologies"));
+		eventBus.post(new IFCtoLBD_SystemStatusEvent("Reading in ontologies"));
 		readInOntologies(ifcowl_model);
 		if (!this.ontURI.isPresent()) {
 			System.err.println("Not an IfcOWL file");
@@ -207,12 +208,12 @@ public class IfcOWLtoLBDConverter {
 			uriBase = Optional.of("https://dot.dc.rwth-aachen.de/IFCtoLBDset#");
 		addNamespaces(uriBase.get(), props_level, hasBuildingElements, hasBuildingProperties);
 
-		eventBus.post(new SystemStatusEvent("IFC->LBD"));
+		eventBus.post(new IFCtoLBD_SystemStatusEvent("IFC->LBD"));
 		if (this.ontURI.isPresent())
 			ifcOWL = new IfcOWLNameSpace(this.ontURI.get());
 		else {
 			System.out.println("No ifcOWL ontology available.");
-			eventBus.post(new SystemStatusEvent("No ifcOWL ontology available."));
+			eventBus.post(new IFCtoLBD_SystemStatusEvent("No ifcOWL ontology available."));
 			return lbd_general_output_model;
 		}
 
@@ -267,7 +268,7 @@ public class IfcOWLtoLBDConverter {
 				addGeolocation2BOT();
 			} catch (Exception e) {
 				System.out.println("No geolocation");
-				eventBus.post(new SystemStatusEvent("Info : No geolocation"));
+				eventBus.post(new IFCtoLBD_SystemStatusEvent("Info : No geolocation"));
 			}
 		}
 
@@ -280,7 +281,7 @@ public class IfcOWLtoLBDConverter {
 			System.out.println("Building properties");
 			lbd_general_output_model.add(lbd_property_output_model);
 		}
-		eventBus.post(new SystemStatusEvent("Done. Linked Building Data File is: " + target_file));
+		eventBus.post(new IFCtoLBD_SystemStatusEvent("Done. Linked Building Data File is: " + target_file));
 	}
 
 	private void handleBuilding(Resource ifcowl_building) {
@@ -311,7 +312,7 @@ public class IfcOWLtoLBDConverter {
 
 		IfcOWLUtils.listStoreys(ifcowl_building, ifcOWL, this.lbd_general_output_model).stream()
 				.map(rn -> rn.asResource()).forEach(storey -> {
-					eventBus.post(new SystemStatusEvent("Storey: " + storey.getLocalName()));
+					eventBus.post(new IFCtoLBD_SystemStatusEvent("Storey: " + storey.getLocalName()));
 
 					if (!RDFUtils.getType(storey.asResource()).get().getURI().endsWith("#IfcBuildingStorey")) {
 						System.err.println("No an #IfcBuildingStorey");
@@ -476,7 +477,7 @@ public class IfcOWLtoLBDConverter {
 			});
 
 		});
-		eventBus.post(new SystemStatusEvent("LBD properties read"));
+		eventBus.post(new IFCtoLBD_SystemStatusEvent("LBD properties read"));
 	}
 
 	/**
@@ -840,7 +841,7 @@ public class IfcOWLtoLBDConverter {
 			}
 
 		} catch (Exception e) {
-			eventBus.post(new SystemStatusEvent(
+			eventBus.post(new IFCtoLBD_SystemStatusEvent(
 					"Error : " + e.getMessage() + " line:" + e.getStackTrace()[0].getLineNumber()));
 			e.printStackTrace();
 
@@ -976,7 +977,7 @@ public class IfcOWLtoLBDConverter {
 
 		});
 
-		eventBus.post(new SystemStatusEvent("LDB geom read"));
+		eventBus.post(new IFCtoLBD_SystemStatusEvent("LDB geom read"));
 
 	}
 

@@ -1,4 +1,4 @@
-package org.lbd.ifc2lbd.messages;
+package org.lbd.ifc2lbd.application_messaging.events;
 
 /*
  * The GNU Affero General Public License
@@ -19,10 +19,10 @@ package org.lbd.ifc2lbd.messages;
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class SystemErrorEvent {
+public class IFCtoLBD_SystemErrorEvent {
 
 	private final String status_message;
-	public SystemErrorEvent(String txt) {
+	public IFCtoLBD_SystemErrorEvent(String txt) {
 		this.status_message=txt;
 	}
 	public String getStatus_message() {

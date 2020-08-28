@@ -23,7 +23,7 @@ import org.lbd.ifc2lbd.ns.IfcOWLNameSpace;
 import org.lbd.ifc2lbd.utils.rdfpath.InvRDFStep;
 import org.lbd.ifc2lbd.utils.rdfpath.RDFStep;
 
-import com.buildingsmart.tech.ifcowl.IfcSpfReader;
+import be.ugent.IfcSpfReader;
 
 /*
  *  Copyright (c) 2017, 2020 Jyrki Oraskari (Jyrki.Oraskari@gmail.f)

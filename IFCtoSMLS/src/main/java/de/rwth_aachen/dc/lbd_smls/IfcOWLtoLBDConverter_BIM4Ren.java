@@ -33,9 +33,9 @@ import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 
-import com.buildingsmart.tech.ifcowl.IfcSpfReader;
 import com.openifctools.guidcompressor.GuidCompressor;
 
+import be.ugent.IfcSpfReader;
 import de.rwth_aachen.dc.lbd_smls.geo.IFC_Geolocation;
 import de.rwth_aachen.dc.lbd_smls.geo.WktLiteral;
 import de.rwth_aachen.dc.lbd_smls.ns.IfcOWLNameSpace;

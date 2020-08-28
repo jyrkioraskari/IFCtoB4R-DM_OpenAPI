@@ -20,8 +20,7 @@ import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 
-import com.buildingsmart.tech.ifcowl.IfcSpfReader;
-
+import be.ugent.IfcSpfReader;
 import de.rwth_aachen.dc.lbd_smls.ns.IfcOWLNameSpace;
 import de.rwth_aachen.dc.lbd_smls.utils.rdfpath.InvRDFStep;
 import de.rwth_aachen.dc.lbd_smls.utils.rdfpath.RDFStep;
