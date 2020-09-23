@@ -75,16 +75,16 @@ http://lbd.arch.rwth-aachen.de/IFCtoLBD_OpenAPI/apidocs/ui/swagger.json
 
 ## How to cite
 ```
-@software{jyrki_oraskari_2020_4006019,
+@software{jyrki_oraskari_2020_4046603,
   author       = {Jyrki Oraskari},
-  title        = {{jyrkioraskari/IFCtoLBD\_OpenAPI: Restful API for 
-                   IFCtoLBD version 1.10}},
-  month        = aug,
+  title        = {{jyrkioraskari/IFCtoB4R-DM\_OpenAPI: Restful API for 
+                   IFC - B4R-DM version 1.12}},
+  month        = sep,
   year         = 2020,
   publisher    = {Zenodo},
-  version      = {1.10},
-  doi          = {10.5281/zenodo.4006019},
-  url          = {https://doi.org/10.5281/zenodo.4006019}
+  version      = {1.14},
+  doi          = {10.5281/zenodo.4046603},
+  url          = {https://doi.org/10.5281/zenodo.4046603}
 }
 ```
 
