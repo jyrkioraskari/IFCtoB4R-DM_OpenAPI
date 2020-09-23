@@ -63,4 +63,9 @@ public class InvRDFStep extends RDFStep {
 		.mapWith(t1 -> t1.getSubject()).forEachRemaining(s -> ret.add(s));
 		return ret;
     }
+	
+	@Override
+	public String toString() {		
+		return "!"+property.getURI();
+	}
 }

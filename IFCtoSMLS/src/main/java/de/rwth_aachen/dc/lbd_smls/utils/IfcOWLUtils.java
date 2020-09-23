@@ -69,6 +69,7 @@ public class IfcOWLUtils {
 
 	// Solution proposed by Simon Steyskal 2018
 	private static RDFStep[] getNextLevelPath(IfcOWLNameSpace ifcOWL) {
+		System.out.println("ifcoWL: "+ifcOWL.getIfcURI());
 		if (ifcOWL.getIfcURI().toUpperCase().indexOf("IFC2X3") != -1) {  // fixed by JO 2020
 			RDFStep[] path = { new InvRDFStep(ifcOWL.getRelatingObject_IfcRelDecomposes()),
 					new RDFStep(ifcOWL.getRelatedObjects_IfcRelDecomposes()) };
@@ -125,10 +126,10 @@ public class IfcOWLUtils {
 	 * @return The list of all #IfcBuilding ifcOWL elements under the site element
 	 */
 	public static List<RDFNode> listBuildings(Resource site, IfcOWLNameSpace ifcOWL) {
-		// System.out.println("Site: "+site.toString());
+		System.out.println("Site: "+site.toString());
 		List<RDFNode> buildings = RDFUtils.pathQuery(site, getNextLevelPath(ifcOWL));
 		if (buildings == null || buildings.size() == 0)
-			System.err.println("No Buildings!");
+			System.err.println("No Buildings! 1");
 		return buildings;
 	}
 
@@ -137,7 +138,7 @@ public class IfcOWLUtils {
 		List<RDFNode> buildings = RDFUtils.pathQuery(site, getNextLevelPath(ifcOWL));
 		if (buildings == null || buildings.size() == 0)
 		{
-			System.err.println("No Buildings!");
+			System.err.println("No Buildings! 2");
 			addError(lbd_general_output_model4_errors,"Model has no buildings");	
 		}
 		return buildings;

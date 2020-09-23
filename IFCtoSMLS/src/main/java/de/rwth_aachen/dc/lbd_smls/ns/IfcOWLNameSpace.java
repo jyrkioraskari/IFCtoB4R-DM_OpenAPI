@@ -66,9 +66,8 @@ public class IfcOWLNameSpace extends abstract_NS {
 	
 	public IfcOWLNameSpace(String ifcURI)
 	{
-		if(ifcURI.endsWith("#"))
-		   ifcURI=ifcURI;
-		else
+		// There should be bo vocabulary that does not end in # or /.  This fixes possible errors
+		if(!ifcURI.endsWith("#")&&!ifcURI.endsWith("/"))
 			ifcURI=ifcURI+"#";
 		this.ifcURI=ifcURI;
 		relatingObject_IfcRelDecomposes = property(ifcURI, "relatingObject_IfcRelDecomposes");
@@ -124,7 +123,7 @@ public class IfcOWLNameSpace extends abstract_NS {
 
 	public Property getProperty(String name)
 	{
-		return property(ifcURI, "#"+name);
+		return property(ifcURI, name);
 	}
 
 	public Property getRelatingObject_IfcRelDecomposes() {

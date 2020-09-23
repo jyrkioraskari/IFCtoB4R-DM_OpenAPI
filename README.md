@@ -14,7 +14,7 @@ http://lbd.arch.rwth-aachen.de/IFCtoLBD_OpenAPI/apidocs/ui/swagger.json
 - IFCtoLBD was added. BOT+SMLS has a separate REST interface 
 - BIMserver integration is functional. Some beta testing is still needed.
 
-## Cite this
+## How to cite
 ```
 @software{jyrki_oraskari_2020_4006019,
   author       = {Jyrki Oraskari},

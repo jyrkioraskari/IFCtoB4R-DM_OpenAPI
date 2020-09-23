@@ -55,4 +55,9 @@ public class RDFStep {
 		r.listProperties(this.property).mapWith(t->t.getObject()).forEachRemaining(o -> ret.add(o));
 		return ret;
     }
+    
+    @Override
+    public String toString() {    	
+    	return property.getURI();
+    }
 }

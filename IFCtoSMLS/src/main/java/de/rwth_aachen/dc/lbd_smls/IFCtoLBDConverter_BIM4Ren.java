@@ -1,9 +1,13 @@
 
 package de.rwth_aachen.dc.lbd_smls;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -86,9 +90,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 	private Map<String, PropertySet_SMLS> propertysets;
 
 	private Model lbd_general_output_model;
-	private IFCBoundingBoxes boundin_boxes = null;
+	private IFCBoundingBoxes bounding_boxes = null;
 
 	public Model convert(String ifc_filename, String uriBase) {
+		System.out.println("convert");
 		this.propertysets = new HashMap<>();
 		this.ifcowl_product_map = new HashMap<>();
 
@@ -97,7 +102,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 		this.uriBase = uriBase;
 
 		try {
-			this.boundin_boxes = new IFCBoundingBoxes(new File(ifc_filename));
+			System.out.println("Set the bounding box generator");
+			this.bounding_boxes = new IFCBoundingBoxes(new File(ifc_filename));
 		} catch (RenderEngineException | DeserializeException | IOException e) {
 			e.printStackTrace();
 		}
@@ -107,9 +113,11 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 		ifcowl_model = readAndConvertIFC(ifc_filename, uriBase); // Before: readInOntologies(ifc_filename);
 		writeModel(ifcowl_model, ifc_model_file_base + "_ifcowl_model.ttl");
-
+		System.out.println("read ontologies");
 		readInOntologies(ifc_filename);
+		System.out.println("create product mapping");
 		createIfcLBDProductMapping();
+		System.out.println("pmapping done");
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
 
@@ -121,10 +129,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 			System.out.println("No ifcOWL ontology available.");
 			return lbd_general_output_model;
 		}
-
+		System.out.println("handle property set data");
 		handlePropertySetData();
-
-		conversion();
+		System.out.println("execution");
+		execution();
 		writeModel(lbd_general_output_model, ifc_model_file_base + "_BOT_SMLS_model.ttl");
 		return lbd_general_output_model;
 	}
@@ -150,8 +158,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 	Set<Resource> has_geometry = new HashSet<>();
 
-	private void conversion() {
-		System.out.println("Conversion");
+	private void execution() {
+		System.out.println("Conversion execution");
 		IfcOWLUtils.listSites(ifcOWL, ifcowl_model).stream().map(rn -> rn.asResource()).forEach(site -> {
 			Resource sio = createformattedURI(site, lbd_general_output_model, "Site");
 			String guid_site = IfcOWLUtils.getGUID(site, this.ifcOWL);
@@ -271,7 +279,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 	private void addBoundingBox(Resource sp, String guid) {
 
 		try {
-			BoundingBox bb = this.boundin_boxes.getBoundingBox(guid);
+			BoundingBox bb = this.bounding_boxes.getBoundingBox(guid);
 			if (bb != null && has_geometry.add(sp)) {
 				Resource sp_blank = this.lbd_general_output_model.createResource();
 				sp.addProperty(LBD_NS.GEO.hasGeometry, sp_blank);
@@ -719,7 +727,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 					continue;
 				Resource ifcowl_class = product_BE_ontology_statement.getObject().asResource();
 				Resource mapped_ifcowl_class = ontology_model
-						.getResource(this.ontURI.get() + "#" + ifcowl_class.getLocalName());
+						.getResource(this.ontURI.get() +  ifcowl_class.getLocalName());
 				StmtIterator subclass_statement_iterator = ontology_model
 						.listStatements(new SimpleSelector(null, RDFS.subClassOf, mapped_ifcowl_class));
 				while (subclass_statement_iterator.hasNext()) {
@@ -774,7 +782,9 @@ public class IFCtoLBDConverter_BIM4Ren {
 				m.setNsPrefix("inst", uriBase);
 
 				this.ontURI = rj.convert(ifc_file, tempFile.getAbsolutePath(), uriBase);
-				RDFDataMgr.read(m, tempFile.getAbsolutePath());
+				File t2 = filterContent(tempFile);
+				RDFDataMgr.read(m, t2.getAbsolutePath());
+
 				return m;
 			} catch (IOException e) {
 				e.printStackTrace();
@@ -790,6 +800,148 @@ public class IFCtoLBDConverter_BIM4Ren {
 		return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
 	}
 
+	
+	private File filterContent(File whole_content_file) {
+		File tempFile = null;
+		int state = 0;
+		try {
+			tempFile = File.createTempFile("ifc", ".ttl");
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile))) {
+				try (BufferedReader br = new BufferedReader(new FileReader(whole_content_file))) {
+					String line;
+					String[] triple = new String[3];
+					for (int i = 0; i < 3; i++)
+						triple[i] = "";
+					while ((line = br.readLine()) != null) {
+						String trimmed = line.trim();
+						if (!line.contains("@prefix") && !trimmed.startsWith("#")) {
+							int len = trimmed.length();
+							if (len > 0) {
+								List<String> t;
+                                if(trimmed.endsWith(".")||trimmed.endsWith(";"))										
+										t=split(trimmed.substring(0, trimmed.length() - 1));
+                                else
+									t=split(trimmed.substring(0, trimmed.length()));
+								if (state == 0) {
+									for (int i = 0; i < t.size(); i++)
+										triple[i] = t.get(i);
+									
+									if (trimmed.endsWith("."))
+										state = 0;
+									else
+									  state = 1;
+									if (t.size() == 3)
+									{
+										StringBuffer sb=new StringBuffer();
+										sb.append(t.get(0));
+										sb.append(" ");
+										sb.append(t.get(1));
+										sb.append(" ");
+										sb.append(t.get(2));
+										sb.append(" .");
+										line =  sb.toString();
+									}
+									else
+										continue;
+								} else {
+									for (int i = 0; i < t.size(); i++)
+										triple[2 - i] = t.get(t.size() - 1 - i);
+									
+									StringBuffer sb=new StringBuffer();
+									sb.append(triple[0]);
+									sb.append(" ");
+									sb.append(triple[1]);
+									sb.append(" ");
+									sb.append(triple[2]);
+									sb.append(" .");
+									line =  sb.toString();
+									
+									if (trimmed.endsWith("."))
+										state = 0;
+								}
+							}
+						}
+						if (line.contains("inst:IfcFace"))
+							continue;
+						if (line.contains("inst:IfcPolyLoop"))
+							continue;
+						if (line.contains("inst:IfcCartesianPoint"))
+							continue;
+						if (line.contains("inst:IfcOwnerHistory"))
+							continue;
+						if (line.contains("inst:IfcRelAssociatesMaterial"))
+							continue;
+
+						if (line.contains("inst:IfcExtrudedAreaSolid"))
+							continue;
+						if (line.contains("inst:IfcCompositeCurve"))
+							continue;
+						if (line.contains("inst:IfcSurfaceStyleRendering"))
+							continue;
+						if (line.contains("inst:IfcStyledItem"))
+							continue;
+						if (line.contains("inst:IfcShapeRepresentation"))
+							continue;
+
+						writer.write(line.trim());
+						writer.newLine();
+					}
+					writer.flush();
+
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		} catch (IOException e2) {
+			e2.printStackTrace();
+		}
+		return tempFile;
+	}
+
+	private List<String> split(String s) {
+		List<String> ret = new ArrayList<>();
+		int state = 0;
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			switch (state) {
+			case 2:
+				if (c == '\"' || c == '\'')
+					state = 0;
+				sb.append(c);
+				break;
+			case 1:
+				if (c == '\"' || c == '\'') {
+					ret.add(sb.toString());
+					sb = new StringBuffer();
+					sb.append(c);
+					state = 2;
+				} else if (!Character.isSpace(c)) {
+					ret.add(sb.toString());
+					sb = new StringBuffer();
+					sb.append(c);
+					state = 0;
+				}
+				break;
+			case 0:
+				if (c == '\"' || c == '\'') {
+					sb.append(c);
+					state = 2;
+				} else if (Character.isSpace(c))
+					state = 1;
+				else
+					sb.append(c);
+				break;
+			}
+		}
+		if (sb.length() > 0)
+			ret.add(sb.toString());
+		return ret;
+	}
+
+	
 	/**
 	 * 
 	 * Reads in a Turtle - Terse RDF Triple Language (TTL) formatted ontology file:
