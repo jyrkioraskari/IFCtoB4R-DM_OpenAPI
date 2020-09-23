@@ -168,7 +168,7 @@ public class IFCtoB4R_OpenAPI {
 	 * 
 	 * MultiPart Form data input
 	 * 
-	 * @param ifcOWLFile anifcOWL Abox Turtle formatted file as form parameter. If the file does not confirm with the ifcOWL specification, an empty output is given.
+	 * @param ifcOWLFile an ifcOWL Abox Turtle formatted file as form parameter. If the file does not confirm with the ifcOWL specification, an empty output is given.
  
 	 * @return Returnd RDF output. Formats are: JSON-LD, RDF/XML, and TTL
 	 */

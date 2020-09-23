@@ -5,7 +5,7 @@
 	
 	
 	<modules>
-		<swagger  basePath="/IFCtoLBD_OpenAPI/api/">	   
+		<swagger  basePath="/IFCtoB4R_OpenAPI/api/">	   
 		</swagger>
 	</modules>
 	<api-classes>
