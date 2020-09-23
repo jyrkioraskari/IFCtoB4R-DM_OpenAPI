@@ -1,7 +1,8 @@
-# IFCtoLBD_OpenAPI
+# IFCtoB4R-DM_OpenAPI
 Version 1.10
 
-An Restful OpenAPI implementation for IFCtoLBD converter.  
+An Restful OpenAPI implementation that converts an IFC Step file into Linked Building Data RDF defined in the B4R-DM ontology.
+The output is compatible with Building Topology Ontology defined in https://w3c-lbd-cg.github.io/bot/. 
 
 A test installation:
 http://lbd.arch.rwth-aachen.de/IFCtoLBD_OpenAPI/apidocs/
