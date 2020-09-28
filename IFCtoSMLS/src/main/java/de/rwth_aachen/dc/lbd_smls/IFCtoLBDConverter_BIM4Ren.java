@@ -216,8 +216,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 					addAttrributes(lbd_general_output_model, storey, so);
 
 					bo.addProperty(LBD_NS.BOT.hasStorey, so);
-					so.addProperty(RDF.type, LBD_NS.BOT.storey);
 					addBoundingBox(so, guid_storey);
+					so.addProperty(RDF.type, LBD_NS.BOT.storey);
 
 					IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource())
 							.forEach(propertyset -> {
@@ -243,9 +243,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 						addAttrributes(lbd_general_output_model, space.asResource(), spo);
 
 						so.addProperty(LBD_NS.BOT.hasSpace, spo);
-						spo.addProperty(RDF.type, LBD_NS.BOT.space);
-
 						addBoundingBox(spo, guid_space);
+						spo.addProperty(RDF.type, LBD_NS.BOT.space);
 
 						IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream()
 								.map(rn -> rn.asResource()).forEach(element -> {
