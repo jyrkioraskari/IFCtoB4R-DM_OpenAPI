@@ -10,6 +10,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,10 +41,13 @@ import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
 import org.bimserver.plugins.deserializers.DeserializeException;
 import org.bimserver.plugins.renderengine.RenderEngineException;
+import org.lbd.ifc2lbd.application_messaging.events.IFCtoLBD_SystemStatusEvent;
 
+import com.google.common.eventbus.EventBus;
 import com.openifctools.guidcompressor.GuidCompressor;
 
 import be.ugent.IfcSpfReader;
+import de.rwth_aachen.dc.lbd.BoundingBox;
 import de.rwth_aachen.dc.lbd.IFCBoundingBoxes;
 import de.rwth_aachen.dc.lbd_smls.geo.IFC_Geolocation;
 import de.rwth_aachen.dc.lbd_smls.geo.WktLiteral;
@@ -52,7 +58,6 @@ import de.rwth_aachen.dc.lbd_smls.utils.FileUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.IfcOWLUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.RDFUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.rdfpath.RDFStep;
-import nl.tue.ddss.bcf.BoundingBox;
 
 /*
  *  Copyright (c) 2017,2018,2019.2020 Jyrki Oraskari (Jyrki.Oraskari@gmail.f)
@@ -137,13 +142,13 @@ public class IFCtoLBDConverter_BIM4Ren {
 		return lbd_general_output_model;
 	}
 
+	
 	public static void writeModel(Model m, String target_file) {
-		System.out.println("Write to: " + target_file);
-		FileOutputStream fo = null;
+		OutputStreamWriter fo = null;
 		try {
-			fo = new FileOutputStream(new File(target_file));
-			if (m == null)
-				System.err.println("Model is empty!!");
+			fo = new OutputStreamWriter(new FileOutputStream(new File(target_file)),
+					Charset.forName("UTF-8").newEncoder());
+
 			m.write(fo, "TTL");
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -155,7 +160,6 @@ public class IFCtoLBDConverter_BIM4Ren {
 				}
 		}
 	}
-
 	Set<Resource> has_geometry = new HashSet<>();
 
 	private void execution() {
@@ -860,6 +864,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 								}
 							}
 						}
+						line= new String(line.getBytes(), StandardCharsets.UTF_8);
 						if (line.contains("inst:IfcFace"))
 							continue;
 						if (line.contains("inst:IfcPolyLoop"))
