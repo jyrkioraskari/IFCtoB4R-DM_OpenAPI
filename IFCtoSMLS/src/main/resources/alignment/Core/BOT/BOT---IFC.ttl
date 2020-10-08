@@ -1,0 +1,44 @@
+@prefix : <http://www.bim4ren.eu/alignment/buildings-IFC#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .  
+@prefix bot: <https://w3id.org/bot#> .
+@prefix b4r-building: <https://www.bim4ren.eu/buildings#> .
+@prefix ifc4: <http://standards.buildingsmart.org/IFC/DEV/IFC4_1/OWL#> .
+@prefix ifc2x3: <http://standards.buildingsmart.org/IFC/DEV/IFC2x3/TC1/OWL#> .
+@base <http://www.bim4ren.eu/alignment/buildings-IFC> .
+
+<http://www.bim4ren.eu/alignment/buildings-IFC> rdf:type owl:Ontology ;
+	dcterms:title "ifcOWL to BOT alignment."@en ;
+	dcterms:description """This ontology defines proposed alignments with the ifcOWL4.1 and ifcOWL2x3 ontologies."""@en ;
+	owl:versionInfo "v0.1" ;
+    owl:versionIRI <http://www.bim4ren.eu/alignment/buildings-IFC/0.1> ;
+	dcterms:creator "Pierre Bourreau" ;
+    owl:imports 	<https://w3id.org/bot> , <http://www.bim4ren.eu/buildings> ,
+					<http://standards.buildingsmart.org/IFC/DEV/IFC4_1/OWL> ,
+					<http://standards.buildingsmart.org/IFC/DEV/IFC2x3/TC1/OWL>.
+
+dcterms:title a owl:AnnotationProperty .
+dcterms:description a owl:AnnotationProperty .
+dcterms:issued a owl:AnnotationProperty .
+dcterms:modified a owl:AnnotationProperty .
+dcterms:creator a owl:AnnotationProperty .
+dcterms:contributor a owl:AnnotationProperty .
+dcterms:license a owl:AnnotationProperty .
+
+#################################################################
+#    Classes
+#################################################################
+
+bot:Site owl:equivalentClass ifc4:IfcSite ;
+		 owl:equivalentClass ifc2x3:IfcSite.
+bot:Building owl:equivalentClass ifc4:IfcBuilding ;
+			 owl:equivalentClass ifc2x3:IfcBuilding .
+bot:Storey owl:equivalentClass ifc4:IfcBuildingStorey  ;
+			 owl:equivalentClass ifc2x3:IfcBuildingStorey .
+bot:Space owl:equivalentClass ifc4:IfcSpace ;
+		  owl:equivalentClass ifc2x3:IfcSpace .
+bot:Element owl:equivalentClass ifc4:IfcElement ;
+		  owl:equivalentClass ifc2x3:IfcElement .

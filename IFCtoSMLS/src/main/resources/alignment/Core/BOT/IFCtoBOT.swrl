@@ -1,0 +1,17 @@
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix bot: <https://w3id.org/bot#> .
+@prefix b4r-building: <https://bim4ren.eu/buildings#> .
+@prefix ifc: <http://standards.buildingsmart.org/IFC/DEV/IFC4_1/OWL#> .
+@prefix ifc2x3: <http://standards.buildingsmart.org/IFC/DEV/IFC2x3/TC1/OWL#> .
+
+
+[relHasElement-IFC: (?z rdf:type bot:Zone)
+					(?c ifc:relatingStructure_IfcRelContainedInSpatialStructure ?z)
+					(?c ifc:relatedElements_IfcRelContainedInSpatialStructure ?p) -> (?z bot:hasElement ?p)]
+
+[relContainsZone-IFC: (?z1 rdf:type bot:Zone) (?z2 rdf:type bot:Zone)
+					  (?rel ifc:relatingObject_IfcRelAggregates ?z1)
+					  (?rel ifc:relatedObjects_IfcRelAggregates ?z2)
+						-> (?z1 bot:containsZone ?z2)]

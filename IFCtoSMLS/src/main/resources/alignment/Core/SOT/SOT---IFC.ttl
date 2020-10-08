@@ -1,0 +1,56 @@
+@prefix : <https://bim4ren.eu/alignment/SOT-IFC#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .  
+@prefix sot: <http://www.bim4ren.eu/sot#> .
+@prefix ifc4: <http://standards.buildingsmart.org/IFC/DEV/IFC4_1/OWL#> .
+@prefix ifc2x3: <http://standards.buildingsmart.org/IFC/DEV/IFC2x3/TC1/OWL#> .
+@base <https://bim4ren.eu/alignment/sot-IFC> .
+
+<https://bim4ren.eu/alignment/sot-IFC> rdf:type owl:Ontology ;
+	dcterms:title "SOT to ifcOwl alignment."@en ;
+	dcterms:description """This ontology defines proposed alignments with the ifcOWL4.1 and ifcOWL2x3 ontologies."""@en ;
+	owl:versionInfo "v0.1" ;
+    owl:versionIRI <https://bim4ren.eu/alignment/sot-IFC/0.1> ;
+	dcterms:creator "Pierre Bourreau" ;
+    owl:imports 	<https://w3id.org/bot> , <http://www.bim4ren.eu/sot#> ,
+					<http://standards.buildingsmart.org/IFC/DEV/IFC4_1/OWL> ,
+					<http://standards.buildingsmart.org/IFC/DEV/IFC2x3/TC1/OWL>.
+
+dcterms:title a owl:AnnotationProperty .
+dcterms:description a owl:AnnotationProperty .
+dcterms:issued a owl:AnnotationProperty .
+dcterms:modified a owl:AnnotationProperty .
+dcterms:creator a owl:AnnotationProperty .
+dcterms:contributor a owl:AnnotationProperty .
+dcterms:license a owl:AnnotationProperty .
+
+#################################################################
+#    Classes
+#################################################################
+
+ifc2x3:IfcDistributionSystem rdfs:subClassOf sot:System.
+ifc4:IfcDistributionSystem rdfs:subClassOf sot:System.
+
+ifc2x3:IfcDistributionElement rdfs:subClassOf sot:SystemComponent.
+ifc4:IfcDistributionElement rdfs:subClassOf sot:SystemComponent.
+
+ifc2x3:IfcDistributionPort rdfs:subClassOf sot:TransportElement.
+ifc4:IfcDistributionPort rdfs:subClassOf sot:TransportElement.
+
+
+
+ifc2x3:IfcFlowTerminal rdfs:subClassOf sot:TerminalElement.
+ifc4:IfcFlowTerminal rdfs:subClassOf sot:TerminalElement.
+
+
+
+#################################################################
+#    Property
+#################################################################
+
+ifc4:IfcRelAssignsToGroup rdfs:subPropertyOf sot:hasElements.
+ifc2x3:IfcRelAssignsToGroup rdfs:subPropertyOf sot:hasElements.
+				

@@ -31,19 +31,13 @@
 	</properties>
 
 	<dependencies>
+		<!-- https://mvnrepository.com/artifact/org.apache.jena/apache-jena-libs -->
 		<dependency>
-			<groupId>com.github.galigator.openllet</groupId>
-			<artifactId>openllet-owlapi</artifactId>
-			<!-- Last version for Java 1.8 -->
-			<version>2.6.4</version>
+			<groupId>org.apache.jena</groupId>
+			<artifactId>apache-jena-libs</artifactId>
+			<version>3.16.0</version>
+			<type>pom</type>
 		</dependency>
-		<dependency>
-			<groupId>com.github.galigator.openllet</groupId>
-			<artifactId>openllet-jena</artifactId>
-			<!-- Last version for Java 1.8 -->
-			<version>2.6.4</version>
-		</dependency>
-
 		<dependency>
 			<groupId>de.rwth-aachen.dc.lbd</groupId>
 			<artifactId>IFCtoB4RGeometry</artifactId>

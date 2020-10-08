@@ -13,6 +13,9 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -21,10 +24,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
-import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.rdf.model.InfModel;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -35,7 +39,8 @@ import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.rdf.model.SimpleSelector;
 import org.apache.jena.rdf.model.Statement;
 import org.apache.jena.rdf.model.StmtIterator;
-import org.apache.jena.reasoner.Reasoner;
+import org.apache.jena.reasoner.rulesys.GenericRuleReasoner;
+import org.apache.jena.reasoner.rulesys.Rule;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.vocabulary.OWL;
@@ -58,7 +63,6 @@ import de.rwth_aachen.dc.lbd_smls.utils.FileUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.IfcOWLUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.RDFUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.rdfpath.RDFStep;
-import openllet.jena.PelletReasonerFactory;
 
 /*
  *  Copyright (c) 2017,2018,2019.2020 Jyrki Oraskari (Jyrki.Oraskari@gmail.f)
@@ -88,7 +92,6 @@ public class IFCtoLBDConverter_BIM4Ren {
 	private Model ontology_model = null;
 	private Map<String, List<Resource>> ifcowl_product_map;
 	private String uriBase;
-	private final OntModel  pelletModel;
 
 	private Optional<String> ontURI = Optional.empty();
 	private IfcOWLNameSpace ifcOWL;
@@ -98,10 +101,6 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 	private Model lbd_general_output_model;
 	private IFCBoundingBoxes bounding_boxes = null;
-
-	public IFCtoLBDConverter_BIM4Ren() {
-		this.pelletModel =  ModelFactory.createOntologyModel(PelletReasonerFactory.THE_SPEC);
-	}
 
 	public Model convert(String ifc_filename, String uriBase) {
 		System.out.println("convert");
@@ -123,6 +122,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 		String ifc_model_file_base = ifc_filename.substring(0, ifc_filename.lastIndexOf("."));
 
 		ifcowl_model = readAndConvertIFC(ifc_filename, uriBase); // Before: readInOntologies(ifc_filename);
+
 		writeModel(ifcowl_model, ifc_model_file_base + "_ifcowl_model.ttl");
 		System.out.println("read ontologies");
 		readInOntologies(ifc_filename);
@@ -131,6 +131,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 		System.out.println("pmapping done");
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
+		this.lbd_general_output_model = convert_SOT(ifcowl_model, this.ontURI.get());
 
 		addNamespaces(uriBase);
 
@@ -340,6 +341,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 //			if (RDFUtils.pathQuery(propertyset, pname_path).get(0).isLiteral()
 //					&& RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString().startsWith("Pset")) 
 			{
+				System.out.println("here: !" + propertyset + "! " + RDFUtils.pathQuery(propertyset, pname_path));
 				String psetName = RDFUtils.pathQuery(propertyset, pname_path).get(0).asLiteral().getString();
 
 				final List<RDFNode> propertyset_name = new ArrayList<>();
@@ -1066,4 +1068,56 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 	}
 
+	public Model convert_SOT(Model model, String ontology_URI) {
+
+			String rule_txt=null;
+			try {
+
+				InputStream IFCtoSOT_inputStream = this.getClass()
+						.getResourceAsStream("/alignment/Core/SOT/IFCtoSOT.swrl");
+				rule_txt = IOUtils.toString(IFCtoSOT_inputStream, StandardCharsets.UTF_8.name());
+				Path tempFile = Files.createTempFile(null, null);
+				rule_txt=setIFC_NS(rule_txt, ontology_URI);
+				Files.write(tempFile, rule_txt.getBytes(StandardCharsets.UTF_8));
+				
+				
+				List rules = Rule.rulesFromURL(tempFile.toFile().getAbsolutePath());
+				System.out.println("rules: " + rules.size());
+				GenericRuleReasoner reasoner = new GenericRuleReasoner(rules);
+
+				InfModel inf = ModelFactory.createInfModel(reasoner, model);
+
+				final Model deductions = ModelFactory.createDefaultModel();
+				inf.listStatements().forEachRemaining(st -> {
+					if (!model.contains(st))
+						deductions.add(st);
+				});
+				return deductions;
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
+		return model;
+	}
+
+	/* remove prefixed and translate https to http */
+	private String setIFC_NS(String txt, String ontology_URI) {
+		if (!ontology_URI.endsWith("#") && !ontology_URI.endsWith("/"))
+			ontology_URI += "#";
+		StringBuffer sb = new StringBuffer();
+		String[] lines = txt.split("\n");
+		for (String l : lines) {
+			if (l.startsWith("@prefix")) {
+				String[] parts = l.split(" ");
+				if (parts[1].trim().equals("ifc:"))
+					sb.append("@prefix ifc: <" + ontology_URI + "> .\n");
+				else
+					sb.append(l + "\n");
+			} else {
+				sb.append(l + "\n");
+			}
+		}
+		return sb.toString();
+	}
 }
