@@ -97,7 +97,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 	private IfcOWLNameSpace ifcOWL;
 
 	// URI-property set
-	private Map<String, PropertySet_SMLS> propertysets;
+	private Map<String, PropertySet_B4R> propertysets;
 
 	private Model lbd_general_output_model;
 	private IFCBoundingBoxes bounding_boxes = null;
@@ -182,7 +182,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			addBoundingBox(sio, guid_site);
 
 			IfcOWLUtils.listPropertysets(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
-				PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+				PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 				if (p_set != null) {
 					p_set.connect(sio, uncompressed_guid_site);
 				}
@@ -207,7 +207,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 				IfcOWLUtils.listPropertysets(building, ifcOWL).stream().map(rn -> rn.asResource())
 						.forEach(propertyset -> {
-							PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+							PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 							if (p_set != null) {
 								p_set.connect(bo, uncompressed_guid_building);
 							}
@@ -233,7 +233,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 							IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource())
 									.forEach(propertyset -> {
-										PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+										PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 										if (p_set != null)
 											p_set.connect(so, uncompressed_guid_storey);
 									});
@@ -271,7 +271,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 								IfcOWLUtils.listPropertysets(space.asResource(), ifcOWL).stream()
 										.map(rn -> rn.asResource()).forEach(propertyset -> {
-											PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+											PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 											if (p_set != null) {
 												p_set.connect(spo, uncompressed_guid_space);
 											}
@@ -359,8 +359,12 @@ public class IFCtoLBDConverter_BIM4Ren {
 					if (property_name.size() == 0)
 						return; // =
 					final List<RDFNode> property_value = new ArrayList<>();
+	                final List<RDFNode> property_unit = new ArrayList<>();
 					final List<RDFNode> property_type = new ArrayList<>();
 
+					RDFStep[] unit_path = { new RDFStep(ifcOWL.getUnit_IfcPropertySingleValue()), new RDFStep(ifcOWL.getName_IfcSIUnit()) };
+	                RDFUtils.pathQuery(propertySingleValue.asResource(), unit_path).forEach(unit -> property_unit.add(unit));      // if this optional property exists, it has the priority
+					
 					RDFStep[] type_path = { new RDFStep(ifcOWL.getNominalValue_IfcPropertySingleValue()),
 							new RDFStep(RDF.type) };
 					RDFUtils.pathQuery(propertySingleValue.asResource(), type_path)
@@ -392,13 +396,13 @@ public class IFCtoLBDConverter_BIM4Ren {
 							.forEach(value -> property_value.add(value));
 
 					RDFNode pname = property_name.get(0);
-					PropertySet_SMLS ps = this.propertysets.get(propertyset.getURI());
+					PropertySet_B4R ps = this.propertysets.get(propertyset.getURI());
 					if (ps == null) {
 						if (!propertyset_name.isEmpty())
-							ps = new PropertySet_SMLS(this.uriBase, lbd_general_output_model, this.ontology_model,
+							ps = new PropertySet_B4R(this.uriBase, lbd_general_output_model, this.ontology_model,
 									propertyset_name.get(0).toString(), unitmap);
 						else
-							ps = new PropertySet_SMLS(this.uriBase, lbd_general_output_model, this.ontology_model, "",
+							ps = new PropertySet_B4R(this.uriBase, lbd_general_output_model, this.ontology_model, "",
 									unitmap);
 						this.propertysets.put(propertyset.getURI(), ps);
 					}
@@ -406,7 +410,11 @@ public class IFCtoLBDConverter_BIM4Ren {
 						RDFNode ptype = property_type.get(0);
 						ps.putPnameType(pname.toString(), ptype);
 					}
-
+					if (property_unit.size() > 0) {
+	                    RDFNode punit = property_unit.get(0);
+	                    ps.putPnameUnit(pname.toString(), punit);
+	                }
+					
 					if (property_value.size() > 0) {
 						RDFNode pvalue = property_value.get(0);
 						if (!pname.toString().equals(pvalue.toString())) {
@@ -489,7 +497,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 			IfcOWLUtils.listPropertysets(ifc_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(propertyset -> {
-						PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+						PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 						if (p_set != null)
 							p_set.connect(eo, uncompressed_guid);
 					});

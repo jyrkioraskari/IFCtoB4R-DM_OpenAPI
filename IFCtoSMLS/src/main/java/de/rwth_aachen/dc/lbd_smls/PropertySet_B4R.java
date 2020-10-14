@@ -43,7 +43,7 @@ import de.rwth_aachen.dc.lbd_smls.utils.StringOperations;
  * 
  *
  */
-public class PropertySet_SMLS {
+public class PropertySet_B4R {
 	private final Map<String, String> unitmap;
 
 	private class PsetProperty {
@@ -63,12 +63,13 @@ public class PropertySet_SMLS {
 
 	private final Map<String, RDFNode> mapPnameValue = new HashMap<>();
 	private final Map<String, RDFNode> mapPnameType = new HashMap<>();
+	private final Map<String, RDFNode> mapPnameUnit = new HashMap<>();
 	private final Map<String, RDFNode> mapBSDD = new HashMap<>();
 
 	private boolean is_bSDD_pset = false;
 	private Resource psetDef = null;
 
-	public PropertySet_SMLS(String uriBase, Model lbd_model, Model ontology_model, String propertyset_name,
+	public PropertySet_B4R(String uriBase, Model lbd_model, Model ontology_model, String propertyset_name,
 			Map<String, String> unitmap) {
 		this.unitmap = unitmap;
 		StmtIterator iter = ontology_model.listStatements(null, LBD_NS.PROPS_NS.namePset, propertyset_name);
@@ -88,6 +89,10 @@ public class PropertySet_SMLS {
 
 	public void putPnameType(String property_name, RDFNode type) {
 		mapPnameType.put(StringOperations.toCamelCase(property_name), type);
+	}
+
+	public void putPnameUnit(String property_name, RDFNode unit) {
+		mapPnameUnit.put(StringOperations.toCamelCase(property_name), unit);
 	}
 
 	public void putPsetPropertyRef(RDFNode property) {
@@ -125,58 +130,74 @@ public class PropertySet_SMLS {
 			for (String pname : this.mapPnameValue.keySet()) {
 				Property property = lbd_resource.getModel().createProperty(LBD_NS.PROPS_NS.props_ns + pname);
 
-				RDFNode ifc_measurement_type = this.mapPnameType.get(pname);
-				if (ifc_measurement_type != null) {
-					String unit = ifc_measurement_type.asResource().getLocalName().toLowerCase();
-					if (unit.startsWith("ifc"))
-						unit = unit.substring(3);
-					if (unit.startsWith("positive"))
-						unit = unit.substring("positive".length());
-					if (unit.endsWith("measure"))
-						unit = unit.substring(0, unit.length() - "measure".length());
-					String si_unit = this.unitmap.get(unit);
-					if (si_unit != null) {
-						Resource bn = lbd_resource.getModel().createResource();
-						lbd_resource.addProperty(property, bn);
+				RDFNode ifc_unit = this.mapPnameUnit.get(pname);
+				if (ifc_unit != null) {
+					Resource bn = lbd_resource.getModel().createResource();
+					lbd_resource.addProperty(property, bn);
+					String si_unit = ifc_unit.asResource().getLocalName();
+					if (si_unit.equals("METRE")) {
+						bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.METER);
+					} else if (si_unit.equals("SQUARE_METRE")) {
+						bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.SQUARE_METRE);
+					} else if (si_unit.equals("CUBIC_METRE")) {
+						bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.CUBIC_METRE);
+					} else if (si_unit.equals("RADIAN")) {
+						bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.RADIAN);
+					}
+				} else {
 
-						bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
+					RDFNode ifc_measurement_type = this.mapPnameType.get(pname);
+					if (ifc_measurement_type != null) {
+						String unit = ifc_measurement_type.asResource().getLocalName().toLowerCase();
+						if (unit.startsWith("ifc"))
+							unit = unit.substring(3);
+						if (unit.startsWith("positive"))
+							unit = unit.substring("positive".length());
+						if (unit.endsWith("measure"))
+							unit = unit.substring(0, unit.length() - "measure".length());
+						String si_unit = this.unitmap.get(unit);
+						if (si_unit != null) {
+							Resource bn = lbd_resource.getModel().createResource();
+							lbd_resource.addProperty(property, bn);
 
-						if (si_unit.equals("METRE")) {
-							bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.METER);
-							//Resource bn_accuracy = lbd_resource.getModel().createResource();
-							//Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
-							//bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
-							//bn_accuracy.addProperty(RDF.value, accuracy);
+							bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
 
-						} else if (si_unit.equals("SQUARE_METRE")) {
-							bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.SQUARE_METRE);
-							//Resource bn_accuracy = lbd_resource.getModel().createResource();
-							//Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
-							//bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
-							//bn_accuracy.addProperty(RDF.value, accuracy);
+							if (si_unit.equals("METRE")) {
+								bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.METER);
+								// Resource bn_accuracy = lbd_resource.getModel().createResource();
+								// Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
+								// bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
+								// bn_accuracy.addProperty(RDF.value, accuracy);
 
-						} else if (si_unit.equals("CUBIC_METRE")) {
-							bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.CUBIC_METRE);
-							//Resource bn_accuracy = lbd_resource.getModel().createResource();
-							//Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
-							//bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
-							//bn_accuracy.addProperty(RDF.value, accuracy);
+							} else if (si_unit.equals("SQUARE_METRE")) {
+								bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.SQUARE_METRE);
+								// Resource bn_accuracy = lbd_resource.getModel().createResource();
+								// Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
+								// bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
+								// bn_accuracy.addProperty(RDF.value, accuracy);
 
-						} 
-						else if (si_unit.equals("RADIAN")) {
-							bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.RADIAN);
-							//Resource bn_accuracy = lbd_resource.getModel().createResource();
-							//Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
-							//bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
-							//bn_accuracy.addProperty(RDF.value, accuracy);
+							} else if (si_unit.equals("CUBIC_METRE")) {
+								bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.CUBIC_METRE);
+								// Resource bn_accuracy = lbd_resource.getModel().createResource();
+								// Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
+								// bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
+								// bn_accuracy.addProperty(RDF.value, accuracy);
 
-						} 
-						/*else {
-							bn.addProperty(LBD_NS.BEXT.si_unit, si_unit);
-							bn.addProperty(LBD_NS.BEXT.unitType, unit);
-						}*/
-					} else {
-						lbd_resource.addProperty(property, this.mapPnameValue.get(pname));
+							} else if (si_unit.equals("RADIAN")) {
+								bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.RADIAN);
+								// Resource bn_accuracy = lbd_resource.getModel().createResource();
+								// Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
+								// bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
+								// bn_accuracy.addProperty(RDF.value, accuracy);
+
+							}
+							/*
+							 * else { bn.addProperty(LBD_NS.BEXT.si_unit, si_unit);
+							 * bn.addProperty(LBD_NS.BEXT.unitType, unit); }
+							 */
+						} else {
+							lbd_resource.addProperty(property, this.mapPnameValue.get(pname));
+						}
 					}
 				}
 			}

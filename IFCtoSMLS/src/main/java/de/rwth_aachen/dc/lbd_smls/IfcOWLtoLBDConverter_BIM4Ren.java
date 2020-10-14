@@ -79,7 +79,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 	private IfcOWLNameSpace ifcOWL;
 
 	// URI-property set
-	private Map<String, PropertySet_SMLS> propertysets;
+	private Map<String, PropertySet_B4R> propertysets;
 
 	private Model lbd_general_output_model;
 
@@ -148,7 +148,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 				
 				IfcOWLUtils.listPropertysets(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
-					PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+					PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 					if (p_set != null) {
 						p_set.connect(sio, final_uncompressed_guid_site);
 					}
@@ -195,7 +195,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 		IfcOWLUtils.listPropertysets(ifcowl_building, ifcOWL).stream().map(rn -> rn.asResource())
 				.forEach(propertyset -> {
-					PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+					PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 					if (p_set != null) {
 						p_set.connect(bo, uncompressed_guid_building);
 					}
@@ -218,7 +218,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 			so.addProperty(RDF.type, LBD_NS.BOT.storey);
 
 			IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
-				PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+				PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 				if (p_set != null)
 					p_set.connect(so, uncompressed_guid_storey);
 			});
@@ -254,7 +254,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 				IfcOWLUtils.listPropertysets(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
 						.forEach(propertyset -> {
-							PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+							PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 							if (p_set != null) {
 								p_set.connect(spo, uncompressed_guid_space);
 							}
@@ -351,13 +351,13 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 							.forEach(value -> property_value.add(value));
 
 					RDFNode pname = property_name.get(0);
-					PropertySet_SMLS ps = this.propertysets.get(propertyset.getURI());
+					PropertySet_B4R ps = this.propertysets.get(propertyset.getURI());
 					if (ps == null) {
 						if (!propertyset_name.isEmpty())
-							ps = new PropertySet_SMLS(this.uriBase.get(), lbd_general_output_model, this.ontology_model,
+							ps = new PropertySet_B4R(this.uriBase.get(), lbd_general_output_model, this.ontology_model,
 									propertyset_name.get(0).toString(), unitmap);
 						else
-							ps = new PropertySet_SMLS(this.uriBase.get(), lbd_general_output_model, this.ontology_model,
+							ps = new PropertySet_B4R(this.uriBase.get(), lbd_general_output_model, this.ontology_model,
 									"", unitmap);
 						this.propertysets.put(propertyset.getURI(), ps);
 					}
@@ -449,7 +449,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 			IfcOWLUtils.listPropertysets(ifc_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(propertyset -> {
-						PropertySet_SMLS p_set = this.propertysets.get(propertyset.getURI());
+						PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
 						if (p_set != null)
 							p_set.connect(eo, uncompressed_guid);
 					});

@@ -35,6 +35,8 @@ public class IfcOWLNameSpace extends abstract_NS {
 	private final Property name_IfcProperty;
 	private final Property hasProperties_IfcPropertySet;
 	private final Property nominalValue_IfcPropertySingleValue;
+    private final Property unit_IfcPropertySingleValue;
+	
 	private final Property description;
 	private final Property name;
 	private final Property longName;
@@ -84,6 +86,7 @@ public class IfcOWLNameSpace extends abstract_NS {
 		name_IfcProperty  =property(ifcURI, "name_IfcProperty");
 		hasProperties_IfcPropertySet =property(ifcURI, "hasProperties_IfcPropertySet");
 		nominalValue_IfcPropertySingleValue =property(ifcURI, "nominalValue_IfcPropertySingleValue");
+        unit_IfcPropertySingleValue = property(ifcURI, "unit_IfcPropertySingleValue");
 		
 		description = property(ifcURI, "description_IfcRoot");
 		name = property(ifcURI, "name_IfcRoot");
@@ -153,6 +156,9 @@ public class IfcOWLNameSpace extends abstract_NS {
 	public Property getNominalValue_IfcPropertySingleValue() {
 		return nominalValue_IfcPropertySingleValue;
 	}
+    public Property getUnit_IfcPropertySingleValue() {
+        return unit_IfcPropertySingleValue;
+    }
 	public Property getDescription() {
 		return description;
 	}
