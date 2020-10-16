@@ -60,6 +60,12 @@ for each element and they are attached to the associated IFC elements in the B4R
 the geo:hasGeometry and geo:asWKT triples of GeoSPARQL 1.0 . The bounding box is represented as
 the Well-Known Text format Multipoint.
 
+## Attribution
+
+This work uses bSDD buildingSMART Data Dictionary data that is licensed under Attribution-ShareAlike 4.0 International.
+
+https://github.com/buildingSMART/bSDD
+
 ## A test installation:
 http://lbd.arch.rwth-aachen.de/IFCtoB4R_OpenAPI/apidocs
 

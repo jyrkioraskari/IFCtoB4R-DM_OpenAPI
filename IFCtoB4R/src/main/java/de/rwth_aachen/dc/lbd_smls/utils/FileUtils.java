@@ -69,7 +69,8 @@ public class FileUtils {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		
+		if (goodFiles.isEmpty())
+            goodFiles = listFiles(src.getLocation().getFile() + dir);
 		return goodFiles;
 	}
 

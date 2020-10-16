@@ -1,8 +1,15 @@
 package de.rwth_aachen.dc.lbd_smls;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.jena.rdf.model.Literal;
@@ -69,9 +76,10 @@ public class PropertySet_B4R {
 	public PropertySet_B4R(String uriBase, Model lbd_model, Model ontology_model, String propertyset_name,
 			Map<String, String> unitmap) {
 		this.unitmap = unitmap;
+		System.out.println("PSEt init");
 		StmtIterator iter = ontology_model.listStatements(null, PROPS.namePset, propertyset_name);
 		if (iter.hasNext()) {
-
+			System.out.println("IS bsDDs");
 			is_bSDD_pset = true;
 			psetDef = iter.next().getSubject();
 		}
@@ -79,6 +87,7 @@ public class PropertySet_B4R {
 		this.lbd_model = lbd_model;
 		this.propertyset_name = propertyset_name;
 	}
+	
 
 	public void putPnameValue(String property_name, RDFNode value) {
 		property_name = org.apache.commons.lang3.StringUtils.stripAccents(property_name);
@@ -86,6 +95,7 @@ public class PropertySet_B4R {
 	}
 
 	public void putPnameType(String property_name, RDFNode type) {
+		System.out.println("property name: "+property_name);
 		property_name = org.apache.commons.lang3.StringUtils.stripAccents(property_name);
 		mapPnameType.put(StringOperations.toCamelCase(property_name), type);
 	}
@@ -106,6 +116,7 @@ public class PropertySet_B4R {
 				StmtIterator iterProp = prop.listProperties(PROPS.namePset);
 				while (iterProp.hasNext()) {
 					Literal psetPropName = iterProp.next().getLiteral();
+					System.out.println("XXXXX "+psetPropName +" - "+ pname);
 					if (psetPropName.getString().equals(pname))
 						mapBSDD.put(StringOperations.toCamelCase(property.toString()), prop);
 					else {
@@ -139,6 +150,8 @@ public class PropertySet_B4R {
 
 					if (mapBSDD.get(pname) != null)
 						bn.addProperty(RDFS.seeAlso, mapBSDD.get(pname));
+					
+					bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
 
 					String si_unit = ifc_unit.asResource().getLocalName();
 					if (si_unit != null) {
@@ -187,4 +200,20 @@ public class PropertySet_B4R {
 				}
 			}
 	}
+	
+	 public Optional<Boolean> isExternal() {
+
+	        RDFNode val = this.mapPnameValue.get("isExternal");
+
+	        if (val == null)
+	            return Optional.empty();
+	        else {
+	            if (!val.isLiteral())
+	                return Optional.empty();
+	            if (val.asLiteral().getValue().equals(true))
+	                return Optional.of(true);
+	            else
+	                return Optional.of(false);
+	        }
+	    }
 }

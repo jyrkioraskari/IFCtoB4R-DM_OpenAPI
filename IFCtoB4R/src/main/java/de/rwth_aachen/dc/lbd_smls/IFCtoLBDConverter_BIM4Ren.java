@@ -135,7 +135,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 		System.out.println("pmapping done");
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
-		//this.lbd_general_output_model = convert_SOT(ifcowl_model, this.ontURI.get());
+		ifcowl_model.add(convert_SOT(ifcowl_model, this.ontURI.get()));
 
 		addNamespaces(uriBase);
 
