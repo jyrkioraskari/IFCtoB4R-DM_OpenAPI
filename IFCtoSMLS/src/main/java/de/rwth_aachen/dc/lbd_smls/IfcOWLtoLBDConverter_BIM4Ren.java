@@ -38,9 +38,14 @@ import com.openifctools.guidcompressor.GuidCompressor;
 import be.ugent.IfcSpfReader;
 import de.rwth_aachen.dc.lbd_smls.geo.IFC_Geolocation;
 import de.rwth_aachen.dc.lbd_smls.geo.WktLiteral;
+import de.rwth_aachen.dc.lbd_smls.ns.BOT;
+import de.rwth_aachen.dc.lbd_smls.ns.GEO;
 import de.rwth_aachen.dc.lbd_smls.ns.IfcOWLNameSpace;
-import de.rwth_aachen.dc.lbd_smls.ns.LBD_NS;
+import de.rwth_aachen.dc.lbd_smls.ns.LBD_NS.PROPS_NS;
 import de.rwth_aachen.dc.lbd_smls.ns.OPM;
+import de.rwth_aachen.dc.lbd_smls.ns.Product;
+import de.rwth_aachen.dc.lbd_smls.ns.SMLS;
+import de.rwth_aachen.dc.lbd_smls.ns.UNIT;
 import de.rwth_aachen.dc.lbd_smls.utils.FileUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.IfcOWLUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.RDFUtils;
@@ -144,7 +149,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 				final String final_uncompressed_guid_site=uncompressed_guid_site;
 				addAttrributes(lbd_general_output_model, site.asResource(), sio);
 
-				sio.addProperty(RDF.type, LBD_NS.BOT.site);
+				sio.addProperty(RDF.type, BOT.site);
 
 				
 				IfcOWLUtils.listPropertysets(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
@@ -188,10 +193,10 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 		addAttrributes(lbd_general_output_model, ifcowl_building, bo);
 
-		bo.addProperty(RDF.type, LBD_NS.BOT.building);
+		bo.addProperty(RDF.type, BOT.building);
 
 		if (bot_site_element != null)
-			bot_site_element.addProperty(LBD_NS.BOT.hasBuilding, bo);
+			bot_site_element.addProperty(BOT.hasBuilding, bo);
 
 		IfcOWLUtils.listPropertysets(ifcowl_building, ifcOWL).stream().map(rn -> rn.asResource())
 				.forEach(propertyset -> {
@@ -214,8 +219,8 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 			addAttrributes(lbd_general_output_model, storey, so);
 
-			bo.addProperty(LBD_NS.BOT.hasStorey, so);
-			so.addProperty(RDF.type, LBD_NS.BOT.storey);
+			bo.addProperty(BOT.hasStorey, so);
+			so.addProperty(RDF.type, BOT.storey);
 
 			IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
 				PropertySet_B4R p_set = this.propertysets.get(propertyset.getURI());
@@ -239,8 +244,8 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 				String uncompressed_guid_space = GuidCompressor.uncompressGuidString(guid_space);
 				addAttrributes(lbd_general_output_model, space.asResource(), spo);
 
-				so.addProperty(LBD_NS.BOT.hasSpace, spo);
-				spo.addProperty(RDF.type, LBD_NS.BOT.space);
+				so.addProperty(BOT.hasSpace, spo);
+				spo.addProperty(RDF.type, BOT.space);
 
 				IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
 						.forEach(element -> {
@@ -249,7 +254,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 				IfcOWLUtils.listAdjacent_SpaceElements(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
 						.forEach(element -> {
-							connectElement(spo, LBD_NS.BOT.adjacentElement, element);
+							connectElement(spo, BOT.adjacentElement, element);
 						});
 
 				IfcOWLUtils.listPropertysets(space.asResource(), ifcOWL).stream().map(rn -> rn.asResource())
@@ -403,15 +408,15 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 	 * @param hasBuildingProperties
 	 */
 	private void addNamespaces(String uriBase) {
-		LBD_NS.SMLS.addNameSpace(lbd_general_output_model);
-		LBD_NS.UNIT.addNameSpace(lbd_general_output_model);
-		LBD_NS.GEO.addNameSpace(lbd_general_output_model);
+		SMLS.addNameSpace(lbd_general_output_model);
+		UNIT.addNameSpace(lbd_general_output_model);
+		GEO.addNameSpace(lbd_general_output_model);
 
-		LBD_NS.BOT.addNameSpace(lbd_general_output_model);
+		BOT.addNameSpace(lbd_general_output_model);
 
-		LBD_NS.Product.addNameSpace(lbd_general_output_model);
-		LBD_NS.PROPS_NS.addNameSpace(lbd_general_output_model);
-		LBD_NS.PROPS_NS.addNameSpace(lbd_general_output_model);
+		Product.addNameSpace(lbd_general_output_model);
+		PROPS_NS.addNameSpace(lbd_general_output_model);
+		PROPS_NS.addNameSpace(lbd_general_output_model);
 
 		OPM.addNameSpacesL3(lbd_general_output_model);
 
@@ -444,8 +449,8 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 				lbd_property_object.addProperty(RDF.type, product);
 			}
 			lbd_property_object.addProperty(RDF.type, bot_type.get());
-			eo.addProperty(RDF.type, LBD_NS.BOT.element);
-			bot_resource.addProperty(LBD_NS.BOT.containsElement, eo);
+			eo.addProperty(RDF.type, BOT.element);
+			bot_resource.addProperty(BOT.containsElement, eo);
 
 			IfcOWLUtils.listPropertysets(ifc_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(propertyset -> {
@@ -457,12 +462,12 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 
 			IfcOWLUtils.listHosted_Elements(ifc_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(ifc_element2 -> {
-						connectElement(eo, LBD_NS.BOT.hasSubElement, ifc_element2);
+						connectElement(eo, BOT.hasSubElement, ifc_element2);
 					});
 
 			IfcOWLUtils.listAggregated_Elements(ifc_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(ifc_element2 -> {
-						connectElement(eo, LBD_NS.BOT.hasSubElement, ifc_element2);
+						connectElement(eo, BOT.hasSubElement, ifc_element2);
 					});
 		}
 	}
@@ -497,7 +502,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 			}
 
 			lbd_property_object.addProperty(RDF.type, lbd_product_type.get());
-			lbd_object.addProperty(RDF.type, LBD_NS.BOT.element);
+			lbd_object.addProperty(RDF.type, BOT.element);
 
 			addAttrributes(this.lbd_general_output_model, ifcowl_element, lbd_object);
 			bot_resource.addProperty(bot_property, lbd_object);
@@ -506,12 +511,12 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 						if (lbd_object.getLocalName().toLowerCase().contains("space"))
 							System.out
 									.println("hosts2: " + ifcowl_element + "-->" + ifc_element2 + " bot:" + lbd_object);
-						connectElement(lbd_object, LBD_NS.BOT.hasSubElement, ifc_element2);
+						connectElement(lbd_object, BOT.hasSubElement, ifc_element2);
 					});
 
 			IfcOWLUtils.listAggregated_Elements(ifcowl_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(ifc_element2 -> {
-						connectElement(lbd_object, LBD_NS.BOT.hasSubElement, ifc_element2);
+						connectElement(lbd_object, BOT.hasSubElement, ifc_element2);
 					});
 		} else {
 			System.err.println("No type: " + ifcowl_element);

@@ -1,7 +1,5 @@
 package de.rwth_aachen.dc.lbd_smls;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,16 +8,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.RDF;
 
 import de.rwth_aachen.dc.lbd_smls.ns.LBD_NS;
 import de.rwth_aachen.dc.lbd_smls.ns.OPM;
+import de.rwth_aachen.dc.lbd_smls.ns.SMLS;
+import de.rwth_aachen.dc.lbd_smls.ns.UNIT;
 import de.rwth_aachen.dc.lbd_smls.utils.StringOperations;
 
 /*
@@ -106,14 +104,14 @@ public class AttributeSet_SMLS {
 
 						bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
 						if (si_unit.equals("METRE")) {
-							bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.METER);
+							bn.addProperty(SMLS.unit, UNIT.METER);
 							//Resource bn_accuracy = lbd_resource.getModel().createResource();
 							//Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
 							//bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
 							//bn_accuracy.addProperty(RDF.value, accuracy);
 
 						} else if (si_unit.equals("SQUARE_METRE")) {
-							bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.SQUARE_METRE);
+							bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE);
 							Resource bn_accuracy = lbd_resource.getModel().createResource();
 							//Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
 							//bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
@@ -121,14 +119,14 @@ public class AttributeSet_SMLS {
 
 						} 
 						else if (si_unit.equals("CUBIC_METRE")) {
-							bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.CUBIC_METRE);
+							bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE);
 							//Resource bn_accuracy = lbd_resource.getModel().createResource();
 							//Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
 							//bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
 							//bn_accuracy.addProperty(RDF.value, accuracy);
 						} 
 						else if (si_unit.equals("RADIAN")) {
-							bn.addProperty(LBD_NS.SMLS.unit, LBD_NS.UNIT.RADIAN);
+							bn.addProperty(SMLS.unit, UNIT.RADIAN);
 							//Resource bn_accuracy = lbd_resource.getModel().createResource();
 							//Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
 							//bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);

@@ -15,7 +15,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,9 +55,14 @@ import de.rwth_aachen.dc.lbd.BoundingBox;
 import de.rwth_aachen.dc.lbd.IFCBoundingBoxes;
 import de.rwth_aachen.dc.lbd_smls.geo.IFC_Geolocation;
 import de.rwth_aachen.dc.lbd_smls.geo.WktLiteral;
+import de.rwth_aachen.dc.lbd_smls.ns.BOT;
+import de.rwth_aachen.dc.lbd_smls.ns.GEO;
 import de.rwth_aachen.dc.lbd_smls.ns.IfcOWLNameSpace;
-import de.rwth_aachen.dc.lbd_smls.ns.LBD_NS;
+import de.rwth_aachen.dc.lbd_smls.ns.LBD_NS.PROPS_NS;
 import de.rwth_aachen.dc.lbd_smls.ns.OPM;
+import de.rwth_aachen.dc.lbd_smls.ns.Product;
+import de.rwth_aachen.dc.lbd_smls.ns.SMLS;
+import de.rwth_aachen.dc.lbd_smls.ns.UNIT;
 import de.rwth_aachen.dc.lbd_smls.utils.FileUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.IfcOWLUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.RDFUtils;
@@ -131,7 +135,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 		System.out.println("pmapping done");
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
-		this.lbd_general_output_model = convert_SOT(ifcowl_model, this.ontURI.get());
+		//this.lbd_general_output_model = convert_SOT(ifcowl_model, this.ontURI.get());
 
 		addNamespaces(uriBase);
 
@@ -177,7 +181,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			String uncompressed_guid_site = GuidCompressor.uncompressGuidString(guid_site);
 
 			addAttrributes(lbd_general_output_model, site.asResource(), sio);
-			sio.addProperty(RDF.type, LBD_NS.BOT.site);
+			sio.addProperty(RDF.type, BOT.site);
 
 			addBoundingBox(sio, guid_site);
 
@@ -201,9 +205,9 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 				addAttrributes(lbd_general_output_model, building, bo);
 
-				bo.addProperty(RDF.type, LBD_NS.BOT.building);
+				bo.addProperty(RDF.type, BOT.building);
 				addBoundingBox(bo, guid_building);
-				sio.addProperty(LBD_NS.BOT.hasBuilding, bo);
+				sio.addProperty(BOT.hasBuilding, bo);
 
 				IfcOWLUtils.listPropertysets(building, ifcOWL).stream().map(rn -> rn.asResource())
 						.forEach(propertyset -> {
@@ -227,9 +231,9 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 							addAttrributes(lbd_general_output_model, storey, so);
 
-							bo.addProperty(LBD_NS.BOT.hasStorey, so);
+							bo.addProperty(BOT.hasStorey, so);
 							addBoundingBox(so, guid_storey);
-							so.addProperty(RDF.type, LBD_NS.BOT.storey);
+							so.addProperty(RDF.type, BOT.storey);
 
 							IfcOWLUtils.listPropertysets(storey, ifcOWL).stream().map(rn -> rn.asResource())
 									.forEach(propertyset -> {
@@ -255,9 +259,9 @@ public class IFCtoLBDConverter_BIM4Ren {
 								String uncompressed_guid_space = GuidCompressor.uncompressGuidString(guid_space);
 								addAttrributes(lbd_general_output_model, space.asResource(), spo);
 
-								so.addProperty(LBD_NS.BOT.hasSpace, spo);
+								so.addProperty(BOT.hasSpace, spo);
 								addBoundingBox(spo, guid_space);
-								spo.addProperty(RDF.type, LBD_NS.BOT.space);
+								spo.addProperty(RDF.type, BOT.space);
 
 								IfcOWLUtils.listContained_SpaceElements(space.asResource(), ifcOWL).stream()
 										.map(rn -> rn.asResource()).forEach(element -> {
@@ -266,7 +270,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 								IfcOWLUtils.listAdjacent_SpaceElements(space.asResource(), ifcOWL).stream()
 										.map(rn -> rn.asResource()).forEach(element -> {
-											connectElement(spo, LBD_NS.BOT.adjacentElement, element);
+											connectElement(spo, BOT.adjacentElement, element);
 										});
 
 								IfcOWLUtils.listPropertysets(space.asResource(), ifcOWL).stream()
@@ -294,8 +298,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 			BoundingBox bb = this.bounding_boxes.getBoundingBox(guid);
 			if (bb != null && has_geometry.add(sp)) {
 				Resource sp_blank = this.lbd_general_output_model.createResource();
-				sp.addProperty(LBD_NS.GEO.hasGeometry, sp_blank);
-				sp_blank.addLiteral(LBD_NS.GEO.asWKT, bb.toString());
+				sp.addProperty(GEO.hasGeometry, sp_blank);
+				sp_blank.addLiteral(GEO.asWKT, bb.toString());
 			}
 		} catch (Exception e) { // Just in case IFCOpenShell does not function under Tomcat
 			e.printStackTrace();
@@ -450,15 +454,15 @@ public class IFCtoLBDConverter_BIM4Ren {
 	 * @param hasBuildingProperties
 	 */
 	private void addNamespaces(String uriBase) {
-		LBD_NS.SMLS.addNameSpace(lbd_general_output_model);
-		LBD_NS.UNIT.addNameSpace(lbd_general_output_model);
-		LBD_NS.GEO.addNameSpace(lbd_general_output_model);
+		SMLS.addNameSpace(lbd_general_output_model);
+		UNIT.addNameSpace(lbd_general_output_model);
+		GEO.addNameSpace(lbd_general_output_model);
 
-		LBD_NS.BOT.addNameSpace(lbd_general_output_model);
+		BOT.addNameSpace(lbd_general_output_model);
 
-		LBD_NS.Product.addNameSpace(lbd_general_output_model);
-		LBD_NS.PROPS_NS.addNameSpace(lbd_general_output_model);
-		LBD_NS.PROPS_NS.addNameSpace(lbd_general_output_model);
+		Product.addNameSpace(lbd_general_output_model);
+		PROPS_NS.addNameSpace(lbd_general_output_model);
+		PROPS_NS.addNameSpace(lbd_general_output_model);
 
 		OPM.addNameSpacesL3(lbd_general_output_model);
 
@@ -492,8 +496,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 				lbd_property_object.addProperty(RDF.type, product);
 			}
 			lbd_property_object.addProperty(RDF.type, bot_type.get());
-			eo.addProperty(RDF.type, LBD_NS.BOT.element);
-			bot_resource.addProperty(LBD_NS.BOT.containsElement, eo);
+			eo.addProperty(RDF.type, BOT.element);
+			bot_resource.addProperty(BOT.containsElement, eo);
 
 			IfcOWLUtils.listPropertysets(ifc_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(propertyset -> {
@@ -505,12 +509,12 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 			IfcOWLUtils.listHosted_Elements(ifc_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(ifc_element2 -> {
-						connectElement(eo, LBD_NS.BOT.hasSubElement, ifc_element2);
+						connectElement(eo, BOT.hasSubElement, ifc_element2);
 					});
 
 			IfcOWLUtils.listAggregated_Elements(ifc_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(ifc_element2 -> {
-						connectElement(eo, LBD_NS.BOT.hasSubElement, ifc_element2);
+						connectElement(eo, BOT.hasSubElement, ifc_element2);
 					});
 		}
 	}
@@ -545,7 +549,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			}
 
 			lbd_property_object.addProperty(RDF.type, lbd_product_type.get());
-			lbd_object.addProperty(RDF.type, LBD_NS.BOT.element);
+			lbd_object.addProperty(RDF.type, BOT.element);
 
 			addAttrributes(this.lbd_general_output_model, ifcowl_element, lbd_object);
 			bot_resource.addProperty(bot_property, lbd_object);
@@ -554,12 +558,12 @@ public class IFCtoLBDConverter_BIM4Ren {
 						if (lbd_object.getLocalName().toLowerCase().contains("space"))
 							System.out
 									.println("hosts2: " + ifcowl_element + "-->" + ifc_element2 + " bot:" + lbd_object);
-						connectElement(lbd_object, LBD_NS.BOT.hasSubElement, ifc_element2);
+						connectElement(lbd_object, BOT.hasSubElement, ifc_element2);
 					});
 
 			IfcOWLUtils.listAggregated_Elements(ifcowl_element, ifcOWL).stream().map(rn -> rn.asResource())
 					.forEach(ifc_element2 -> {
-						connectElement(lbd_object, LBD_NS.BOT.hasSubElement, ifc_element2);
+						connectElement(lbd_object, BOT.hasSubElement, ifc_element2);
 					});
 		} else {
 			System.err.println("No type: " + ifcowl_element);
@@ -880,6 +884,85 @@ public class IFCtoLBDConverter_BIM4Ren {
 							}
 						}
 						line = new String(line.getBytes(), StandardCharsets.UTF_8);
+						line=line.replace("\\\\","\\");
+						
+						// UTF-8 fix for French double encoding
+						line=line.replace("\\X\\0D","");				
+						line=line.replace("\\X\\0A","");
+						
+						line=line.replace("\\X2\\00A0\\X0\\","");
+						// LATIN letters
+						line=line.replace("\\X2\\00C0\\X0\\","À");
+						line=line.replace("\\X2\\00C1\\X0\\","Á");
+						line=line.replace("\\X2\\00C2\\X0\\","Â");
+						line=line.replace("\\X2\\00C3\\X0\\","Ã");
+						line=line.replace("\\X2\\00C4\\X0\\","Ä");
+						line=line.replace("\\X2\\00C5\\X0\\","Å");
+						line=line.replace("\\X2\\00C6\\X0\\","Æ");
+						line=line.replace("\\X2\\00C7\\X0\\","Ç");
+						line=line.replace("\\X2\\00C8\\X0\\","È");
+						line=line.replace("\\X2\\00C9\\X0\\","É");
+						line=line.replace("\\X2\\00CA\\X0\\","Ê");
+						line=line.replace("\\X2\\00CB\\X0\\","Ë");
+						line=line.replace("\\X2\\00CC\\X0\\","Ì");
+						line=line.replace("\\X2\\00CD\\X0\\","Í");
+						line=line.replace("\\X2\\00CE\\X0\\","Î");
+						line=line.replace("\\X2\\00CF\\X0\\","Ï");
+						
+						line=line.replace("\\X2\\00D0\\X0\\","Ð");
+						line=line.replace("\\X2\\00D1\\X0\\","Ñ");
+						line=line.replace("\\X2\\00D2\\X0\\","Ò");
+						line=line.replace("\\X2\\00D3\\X0\\","Ó");
+						line=line.replace("\\X2\\00D4\\X0\\","Ô");
+						line=line.replace("\\X2\\00D5\\X0\\","Õ");
+						line=line.replace("\\X2\\00D6\\X0\\","Ö");
+						line=line.replace("\\X2\\00D7\\X0\\","×");
+						line=line.replace("\\X2\\00D8\\X0\\","Ø");
+						line=line.replace("\\X2\\00D9\\X0\\","Ù");
+						line=line.replace("\\X2\\00DA\\X0\\","Ú");
+						line=line.replace("\\X2\\00DB\\X0\\","Û");
+						line=line.replace("\\X2\\00DC\\X0\\","Ü");
+						line=line.replace("\\X2\\00DD\\X0\\","Ý");
+						line=line.replace("\\X2\\00DE\\X0\\","Þ");
+						line=line.replace("\\X2\\00DF\\X0\\","ß");
+						
+						line=line.replace("\\X2\\00E0\\X0\\","à");
+						line=line.replace("\\X2\\00E1\\X0\\","á");
+						line=line.replace("\\X2\\00E2\\X0\\","â");
+						line=line.replace("\\X2\\00E3\\X0\\","ã");
+						line=line.replace("\\X2\\00E4\\X0\\","ä");
+						line=line.replace("\\X2\\00E5\\X0\\","å");
+						line=line.replace("\\X2\\00E6\\X0\\","æ");						
+						line=line.replace("\\X2\\00E7\\X0\\","ç");
+						line=line.replace("\\X2\\00E8\\X0\\","è");
+						line=line.replace("\\X2\\00E9\\X0\\","é");
+						line=line.replace("\\X2\\00EA\\X0\\","ê");
+						line=line.replace("\\X2\\00EB\\X0\\","ê");
+						line=line.replace("\\X2\\00EC\\X0\\","ì");
+						line=line.replace("\\X2\\00ED\\X0\\","í");
+						line=line.replace("\\X2\\00EE\\X0\\","î");
+						line=line.replace("\\X2\\00EF\\X0\\","ï");
+						
+						line=line.replace("\\X2\\00F0\\X0\\","ð");
+						line=line.replace("\\X2\\00F1\\X0\\","ñ");
+						line=line.replace("\\X2\\00F2\\X0\\","ò");
+						line=line.replace("\\X2\\00F3\\X0\\","ó");
+						line=line.replace("\\X2\\00F4\\X0\\","ô");
+						line=line.replace("\\X2\\00F5\\X0\\","õ");
+						line=line.replace("\\X2\\00F6\\X0\\","ö");
+						line=line.replace("\\X2\\00F7\\X0\\","÷");
+						line=line.replace("\\X2\\00F8\\X0\\","ø");
+						line=line.replace("\\X2\\00F9\\X0\\","ù");
+						line=line.replace("\\X2\\00FA\\X0\\","ú");
+						line=line.replace("\\X2\\00FB\\X0\\","û");
+						line=line.replace("\\X2\\00FC\\X0\\","ü");
+						line=line.replace("\\X2\\00FD\\X0\\","ý");
+						line=line.replace("\\X2\\00FE\\X0\\","þ");
+						line=line.replace("\\X2\\00FF\\X0\\","ÿ");
+						
+						line=line.replace("\\","\\\\");
+						line=line.replace("\\\\\"","\\\"");
+
 						if (line.contains("inst:IfcFace"))
 							continue;
 						if (line.contains("inst:IfcPolyLoop"))
