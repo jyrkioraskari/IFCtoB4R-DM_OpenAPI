@@ -58,8 +58,8 @@ import de.rwth_aachen.dc.lbd_smls.geo.WktLiteral;
 import de.rwth_aachen.dc.lbd_smls.ns.BOT;
 import de.rwth_aachen.dc.lbd_smls.ns.GEO;
 import de.rwth_aachen.dc.lbd_smls.ns.IfcOWLNameSpace;
-import de.rwth_aachen.dc.lbd_smls.ns.LBD_NS.PROPS_NS;
 import de.rwth_aachen.dc.lbd_smls.ns.OPM;
+import de.rwth_aachen.dc.lbd_smls.ns.PROPS;
 import de.rwth_aachen.dc.lbd_smls.ns.Product;
 import de.rwth_aachen.dc.lbd_smls.ns.SMLS;
 import de.rwth_aachen.dc.lbd_smls.ns.UNIT;
@@ -461,8 +461,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 		BOT.addNameSpace(lbd_general_output_model);
 
 		Product.addNameSpace(lbd_general_output_model);
-		PROPS_NS.addNameSpace(lbd_general_output_model);
-		PROPS_NS.addNameSpace(lbd_general_output_model);
+		PROPS.addNameSpace(lbd_general_output_model);
+		PROPS.addNameSpace(lbd_general_output_model);
 
 		OPM.addNameSpacesL3(lbd_general_output_model);
 

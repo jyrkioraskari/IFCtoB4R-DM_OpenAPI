@@ -14,7 +14,6 @@ public class BOT extends abstract_NS{
 	public static final Property containsElement =property(bot_ns,"containsElement");
 
 	public static final Property hasSubElement =property(bot_ns,"hasSubElement");
-	//public static final Property aggregates =property(bot_ns,"aggregates"); DEPRECATED
 
 	public static final Property hasSpace =property(bot_ns,"hasSpace");
 	

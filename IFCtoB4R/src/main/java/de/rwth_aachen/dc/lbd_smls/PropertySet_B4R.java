@@ -1,9 +1,7 @@
 package de.rwth_aachen.dc.lbd_smls;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,9 +12,9 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.StmtIterator;
 import org.apache.jena.vocabulary.RDF;
+import org.apache.jena.vocabulary.RDFS;
 
-import de.rwth_aachen.dc.lbd_smls.ns.LBD_NS;
-import de.rwth_aachen.dc.lbd_smls.ns.OPM;
+import de.rwth_aachen.dc.lbd_smls.ns.PROPS;
 import de.rwth_aachen.dc.lbd_smls.ns.SMLS;
 import de.rwth_aachen.dc.lbd_smls.ns.UNIT;
 import de.rwth_aachen.dc.lbd_smls.utils.StringOperations;
@@ -71,7 +69,7 @@ public class PropertySet_B4R {
 	public PropertySet_B4R(String uriBase, Model lbd_model, Model ontology_model, String propertyset_name,
 			Map<String, String> unitmap) {
 		this.unitmap = unitmap;
-		StmtIterator iter = ontology_model.listStatements(null, LBD_NS.PROPS_NS.namePset, propertyset_name);
+		StmtIterator iter = ontology_model.listStatements(null, PROPS.namePset, propertyset_name);
 		if (iter.hasNext()) {
 
 			is_bSDD_pset = true;
@@ -82,32 +80,30 @@ public class PropertySet_B4R {
 		this.propertyset_name = propertyset_name;
 	}
 
-	public void putPnameValue(String property_name, RDFNode value) {		
-		property_name=org.apache.commons.lang3.StringUtils.stripAccents(property_name);
+	public void putPnameValue(String property_name, RDFNode value) {
+		property_name = org.apache.commons.lang3.StringUtils.stripAccents(property_name);
 		mapPnameValue.put(StringOperations.toCamelCase(property_name), value);
 	}
 
-	
-	
 	public void putPnameType(String property_name, RDFNode type) {
-		property_name=org.apache.commons.lang3.StringUtils.stripAccents(property_name);
+		property_name = org.apache.commons.lang3.StringUtils.stripAccents(property_name);
 		mapPnameType.put(StringOperations.toCamelCase(property_name), type);
 	}
 
 	public void putPnameUnit(String property_name, RDFNode unit) {
-		property_name=org.apache.commons.lang3.StringUtils.stripAccents(property_name);
+		property_name = org.apache.commons.lang3.StringUtils.stripAccents(property_name);
 		mapPnameUnit.put(StringOperations.toCamelCase(property_name), unit);
 	}
 
 	public void putPsetPropertyRef(RDFNode property) {
 		String pname = property.asLiteral().getString();
-		pname=org.apache.commons.lang3.StringUtils.stripAccents(pname);
+		pname = org.apache.commons.lang3.StringUtils.stripAccents(pname);
 
 		if (is_bSDD_pset) {
-			StmtIterator iter = psetDef.listProperties(LBD_NS.PROPS_NS.propertyDef);
+			StmtIterator iter = psetDef.listProperties(PROPS.propertyDef);
 			while (iter.hasNext()) {
 				Resource prop = iter.next().getResource();
-				StmtIterator iterProp = prop.listProperties(LBD_NS.PROPS_NS.namePset);
+				StmtIterator iterProp = prop.listProperties(PROPS.namePset);
 				while (iterProp.hasNext()) {
 					Literal psetPropName = iterProp.next().getLiteral();
 					if (psetPropName.getString().equals(pname))
@@ -134,21 +130,27 @@ public class PropertySet_B4R {
 
 		if (hashes.add(lbd_resource.getURI()))
 			for (String pname : this.mapPnameValue.keySet()) {
-				Property property = lbd_resource.getModel().createProperty(LBD_NS.PROPS_NS.props_ns + pname);
+				Property property = lbd_resource.getModel().createProperty(PROPS.props_ns + pname);
 
 				RDFNode ifc_unit = this.mapPnameUnit.get(pname);
 				if (ifc_unit != null) {
 					Resource bn = lbd_resource.getModel().createResource();
 					lbd_resource.addProperty(property, bn);
+
+					if (mapBSDD.get(pname) != null)
+						bn.addProperty(RDFS.seeAlso, mapBSDD.get(pname));
+
 					String si_unit = ifc_unit.asResource().getLocalName();
-					if (si_unit.equals("METRE")) {
-						bn.addProperty(SMLS.unit, UNIT.METER);
-					} else if (si_unit.equals("SQUARE_METRE")) {
-						bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE);
-					} else if (si_unit.equals("CUBIC_METRE")) {
-						bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE);
-					} else if (si_unit.equals("RADIAN")) {
-						bn.addProperty(SMLS.unit, UNIT.RADIAN);
+					if (si_unit != null) {
+						if (si_unit.equals("METRE")) {
+							bn.addProperty(SMLS.unit, UNIT.METER);
+						} else if (si_unit.equals("SQUARE_METRE")) {
+							bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE);
+						} else if (si_unit.equals("CUBIC_METRE")) {
+							bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE);
+						} else if (si_unit.equals("RADIAN")) {
+							bn.addProperty(SMLS.unit, UNIT.RADIAN);
+						}
 					}
 				} else {
 
@@ -162,69 +164,27 @@ public class PropertySet_B4R {
 						if (unit.endsWith("measure"))
 							unit = unit.substring(0, unit.length() - "measure".length());
 						String si_unit = this.unitmap.get(unit);
+						Resource bn = lbd_resource.getModel().createResource();
+						lbd_resource.addProperty(property, bn);
+
+						if (mapBSDD.get(pname) != null)
+							bn.addProperty(RDFS.seeAlso, mapBSDD.get(pname));
+
+						bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
+
 						if (si_unit != null) {
-							Resource bn = lbd_resource.getModel().createResource();
-							lbd_resource.addProperty(property, bn);
-
-							bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
-
 							if (si_unit.equals("METRE")) {
 								bn.addProperty(SMLS.unit, UNIT.METER);
-								// Resource bn_accuracy = lbd_resource.getModel().createResource();
-								// Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
-								// bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
-								// bn_accuracy.addProperty(RDF.value, accuracy);
-
 							} else if (si_unit.equals("SQUARE_METRE")) {
 								bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE);
-								// Resource bn_accuracy = lbd_resource.getModel().createResource();
-								// Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
-								// bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
-								// bn_accuracy.addProperty(RDF.value, accuracy);
-
 							} else if (si_unit.equals("CUBIC_METRE")) {
 								bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE);
-								// Resource bn_accuracy = lbd_resource.getModel().createResource();
-								// Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
-								// bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
-								// bn_accuracy.addProperty(RDF.value, accuracy);
-
 							} else if (si_unit.equals("RADIAN")) {
 								bn.addProperty(SMLS.unit, UNIT.RADIAN);
-								// Resource bn_accuracy = lbd_resource.getModel().createResource();
-								// Literal accuracy = lbd_resource.getModel().createTypedLiteral(1f);
-								// bn.addProperty(LBD_NS.SMLS.accuracy, bn_accuracy);
-								// bn_accuracy.addProperty(RDF.value, accuracy);
-
 							}
-							/*
-							 * else { bn.addProperty(LBD_NS.BEXT.si_unit, si_unit);
-							 * bn.addProperty(LBD_NS.BEXT.unitType, unit); }
-							 */
-						} else {
-							lbd_resource.addProperty(property, this.mapPnameValue.get(pname));
 						}
 					}
 				}
 			}
 	}
-
-	private List<PsetProperty> writeOPM_Set(String long_guid) {
-		List<PsetProperty> properties = new ArrayList<>();
-		for (String key : this.mapPnameValue.keySet()) {
-			Resource property_resource;
-			property_resource = this.lbd_model.createResource(this.uriBase + key + "_" + long_guid);
-
-			if (mapBSDD.get(key) != null)
-				property_resource.addProperty(LBD_NS.PROPS_NS.isBSDDProp, mapBSDD.get(key));
-
-			property_resource.addProperty(OPM.value, this.mapPnameValue.get(key));
-
-			Property p;
-			p = this.lbd_model.createProperty(LBD_NS.PROPS_NS.props_ns + StringOperations.toCamelCase(key));
-			properties.add(new PsetProperty(p, property_resource));
-		}
-		return properties;
-	}
-
 }
