@@ -80,7 +80,17 @@ public class IfcOWLUtils {
 			return path;
 		}
 	}
+	
+	public static Resource getIfcProject(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
+		RDFStep[] path = { new InvRDFStep(RDF.type) };
+		List<RDFNode> list= RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcProject()), path);
+		if(!list.isEmpty())
+			return list.get(0).asResource();
+		else
+			return null;
+	}
 
+	
 	public static List<RDFNode> listSites(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
 		RDFStep[] path = { new InvRDFStep(RDF.type) };
 		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcSite()), path);
@@ -98,12 +108,12 @@ public class IfcOWLUtils {
 
 
 	
-	public static List<RDFNode> listBuilding(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
+	public static List<RDFNode> listBuildings(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
 		RDFStep[] path = { new InvRDFStep(RDF.type) };
 		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcBuilding()), path);
 	}
 
-	public static List<RDFNode> listBuilding(IfcOWLNameSpace ifcOWL, Model ifcowl_model,Model lbd_general_output_model4_errors ) {
+	public static List<RDFNode> listBuildings(IfcOWLNameSpace ifcOWL, Model ifcowl_model,Model lbd_general_output_model4_errors ) {
 		RDFStep[] path = { new InvRDFStep(RDF.type) };
 		List<RDFNode> ret=RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcBuilding()), path);
 		

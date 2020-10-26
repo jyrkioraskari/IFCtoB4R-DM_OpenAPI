@@ -44,11 +44,15 @@ public class IfcOWLNameSpace extends abstract_NS {
 
 	private final Property units_IfcUnitAssignment;
 	private final Property unitType_IfcNamedUnit;
+	private final Property prefix_IfcSIUnit;
 	private final Property name_IfcSIUnit;
+
+    private final Property unitsInContext_IfcProject;
+
 	
-	
-	private final String IfcBuilding;
+	private final String IfcProject;
 	private final String IfcSite;
+	private final String IfcBuilding;
 	private final String IfcSpace;
 	private final String IfcProduct;
 	private final String IfcPropertySet;
@@ -93,10 +97,14 @@ public class IfcOWLNameSpace extends abstract_NS {
 		longName = property(ifcURI, "longName_IfcSpatialStructureElement");
 		units_IfcUnitAssignment=property(ifcURI, "units_IfcUnitAssignment");
 		
+		unitsInContext_IfcProject = property(ifcURI, "unitsInContext_IfcProject");
+		
+		
 		guid = property(ifcURI, "globalId_IfcRoot");
 
-		IfcBuilding = ifcURI + "IfcBuilding";
+		IfcProject = ifcURI + "IfcProject";
 		IfcSite = ifcURI + "IfcSite";
+		IfcBuilding = ifcURI + "IfcBuilding";
 		IfcSpace = ifcURI + "IfcSpace";
 		IfcProduct = ifcURI + "IfcProduct";
 		IfcPropertySet = ifcURI + "IfcPropertySet";
@@ -104,6 +112,7 @@ public class IfcOWLNameSpace extends abstract_NS {
 		IfcSIUnit = ifcURI + "IfcSIUnit";
 		
 		unitType_IfcNamedUnit = property(ifcURI, "unitType_IfcNamedUnit");
+		prefix_IfcSIUnit = property(ifcURI, "prefix_IfcSIUnit");
 		name_IfcSIUnit = property(ifcURI, "name_IfcSIUnit");
 		LENGTHUNIT= ifcURI + "LENGTHUNIT";
 		AREAUNIT= ifcURI + "AREAUNIT";
@@ -182,13 +191,29 @@ public class IfcOWLNameSpace extends abstract_NS {
 	public Property getName_IfcSIUnit() {
 		return name_IfcSIUnit;
 	}
+	
+	public Property getPrefix_IfcSIUnit() {
+		return prefix_IfcSIUnit;
+	}
+
+
+
+	public Property getUnitsInContext_IfcProject() {
+		return unitsInContext_IfcProject;
+	}
 
 	
-	public String getIfcBuilding() {
-		return IfcBuilding;
+	public String getIfcProject() {
+		return IfcProject;
 	}
+
+
+
 	public String getIfcSite() {
 		return IfcSite;
+	}
+	public String getIfcBuilding() {
+		return IfcBuilding;
 	}
 	public String getIfcSpace() {
 		return IfcSpace;

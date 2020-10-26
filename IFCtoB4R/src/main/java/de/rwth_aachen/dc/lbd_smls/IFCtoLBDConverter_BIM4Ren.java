@@ -4,6 +4,7 @@ package de.rwth_aachen.dc.lbd_smls;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -135,8 +136,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 		System.out.println("pmapping done");
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
-		ifcowl_model.add(convert_SOT(ifcowl_model, this.ontURI.get()));
-
+		// ifcowl_model.add(convert_SOT(ifcowl_model, this.ontURI.get()));
+		// writeModel(ifcowl_model, ifc_model_file_base + "_ifcowl_model.ttl");
 		addNamespaces(uriBase);
 
 		if (this.ontURI.isPresent())
@@ -320,22 +321,46 @@ public class IFCtoLBDConverter_BIM4Ren {
 	 */
 	private void handlePropertySetData() {
 
-		List<RDFNode> units = IfcOWLUtils.getProjectSIUnits(ifcOWL, ifcowl_model);
-		for (RDFNode ru : units) {
-			RDFStep[] namedUnit_path = { new RDFStep(ifcOWL.getUnitType_IfcNamedUnit()) };
-			List<RDFNode> r1 = RDFUtils.pathQuery(ru.asResource(), namedUnit_path);
+		Resource ifcproject = IfcOWLUtils.getIfcProject(ifcOWL, ifcowl_model);
 
-			String named_unit = null;
-			for (RDFNode l1 : r1)
-				named_unit = l1.asResource().getLocalName().substring(0, l1.asResource().getLocalName().length() - 4);
+		RDFStep[] project_units_path = { new RDFStep(ifcOWL.getUnitsInContext_IfcProject()),
+				new RDFStep(ifcOWL.getUnits_IfcUnitAssignment()) };
 
-			RDFStep[] siUnit_path = { new RDFStep(ifcOWL.getName_IfcSIUnit()) };
-			List<RDFNode> r2 = RDFUtils.pathQuery(ru.asResource(), siUnit_path);
-			String si_unit = null;
-			for (RDFNode l2 : r2)
-				si_unit = l2.asResource().getLocalName();
-			if (named_unit != null && si_unit != null)
-				unitmap.put(named_unit.toLowerCase(), si_unit);
+		System.out.println("UNITS!!");
+		if (ifcproject != null) {
+			List<RDFNode> units = RDFUtils.pathQuery(ifcproject, project_units_path);
+			System.out.println("units size: " + units.size());
+			for (RDFNode ru : units) {
+				System.out.println("ru: " + ru);
+				RDFStep[] namedUnit_path = { new RDFStep(ifcOWL.getUnitType_IfcNamedUnit()) };
+				List<RDFNode> r1 = RDFUtils.pathQuery(ru.asResource(), namedUnit_path);
+
+				String named_unit = null;
+				for (RDFNode l1 : r1)
+					named_unit = l1.asResource().getLocalName().substring(0,
+							l1.asResource().getLocalName().length() - 4);
+
+				RDFStep[] siUnit_prefix_path = { new RDFStep(ifcOWL.getPrefix_IfcSIUnit()) };
+				List<RDFNode> runit_pref = RDFUtils.pathQuery(ru.asResource(), siUnit_prefix_path);
+
+				String si_prefix = null;
+				for (RDFNode lpref : runit_pref)
+					si_prefix = lpref.asResource().getLocalName();
+
+				RDFStep[] siUnit_path = { new RDFStep(ifcOWL.getName_IfcSIUnit()) };
+				List<RDFNode> runit_name = RDFUtils.pathQuery(ru.asResource(), siUnit_path);
+				String si_unit = null;
+				for (RDFNode lname : runit_name)
+					si_unit = lname.asResource().getLocalName();
+
+				if (si_prefix != null)
+					si_unit = si_prefix + " " + si_unit;
+
+				if (named_unit != null && si_unit != null) {
+					System.out.println("SI UNIT: " + named_unit + " - " + si_unit);
+					unitmap.put(named_unit.toLowerCase(), si_unit);
+				}
+			}
 		}
 
 		IfcOWLUtils.listPropertysets(ifcOWL, ifcowl_model).stream().map(rn -> rn.asResource()).forEach(propertyset -> {
@@ -363,12 +388,15 @@ public class IFCtoLBDConverter_BIM4Ren {
 					if (property_name.size() == 0)
 						return; // =
 					final List<RDFNode> property_value = new ArrayList<>();
-	                final List<RDFNode> property_unit = new ArrayList<>();
+					final List<RDFNode> property_unit = new ArrayList<>();
 					final List<RDFNode> property_type = new ArrayList<>();
 
-					RDFStep[] unit_path = { new RDFStep(ifcOWL.getUnit_IfcPropertySingleValue()), new RDFStep(ifcOWL.getName_IfcSIUnit()) };
-	                RDFUtils.pathQuery(propertySingleValue.asResource(), unit_path).forEach(unit -> property_unit.add(unit));      // if this optional property exists, it has the priority
-					
+					RDFStep[] unit_path = { new RDFStep(ifcOWL.getUnit_IfcPropertySingleValue()),
+							new RDFStep(ifcOWL.getName_IfcSIUnit()) };
+					RDFUtils.pathQuery(propertySingleValue.asResource(), unit_path)
+							.forEach(unit -> property_unit.add(unit)); // if this optional property exists, it has the
+																		// priority
+
 					RDFStep[] type_path = { new RDFStep(ifcOWL.getNominalValue_IfcPropertySingleValue()),
 							new RDFStep(RDF.type) };
 					RDFUtils.pathQuery(propertySingleValue.asResource(), type_path)
@@ -415,10 +443,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 						ps.putPnameType(pname.toString(), ptype);
 					}
 					if (property_unit.size() > 0) {
-	                    RDFNode punit = property_unit.get(0);
-	                    ps.putPnameUnit(pname.toString(), punit);
-	                }
-					
+						RDFNode punit = property_unit.get(0);
+						ps.putPnameUnit(pname.toString(), punit);
+					}
+
 					if (property_value.size() > 0) {
 						RDFNode pvalue = property_value.get(0);
 						if (!pname.toString().equals(pvalue.toString())) {
@@ -799,7 +827,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 			IfcSpfReader rj = new IfcSpfReader();
 			File tempFile = File.createTempFile("ifc", ".ttl");
 			try {
-				Model m = ModelFactory.createDefaultModel();
+				Model m = ModelFactory.createDefaultModel();// createOntologyModel(OntModelSpec.RDFS_MEM_RDFS_INF); //
+															// super slow
 				m.setNsPrefix("rdf", RDF.uri);
 				m.setNsPrefix("rdfs", RDFS.uri);
 				m.setNsPrefix("owl", OWL.getURI());
@@ -884,84 +913,84 @@ public class IFCtoLBDConverter_BIM4Ren {
 							}
 						}
 						line = new String(line.getBytes(), StandardCharsets.UTF_8);
-						line=line.replace("\\\\","\\");
-						
+						line = line.replace("\\\\", "\\");
+
 						// UTF-8 fix for French double encoding
-						line=line.replace("\\X\\0D","");				
-						line=line.replace("\\X\\0A","");
-						
-						line=line.replace("\\X2\\00A0\\X0\\","");
+						line = line.replace("\\X\\0D", "");
+						line = line.replace("\\X\\0A", "");
+
+						line = line.replace("\\X2\\00A0\\X0\\", "");
 						// LATIN letters
-						line=line.replace("\\X2\\00C0\\X0\\","À");
-						line=line.replace("\\X2\\00C1\\X0\\","Á");
-						line=line.replace("\\X2\\00C2\\X0\\","Â");
-						line=line.replace("\\X2\\00C3\\X0\\","Ã");
-						line=line.replace("\\X2\\00C4\\X0\\","Ä");
-						line=line.replace("\\X2\\00C5\\X0\\","Å");
-						line=line.replace("\\X2\\00C6\\X0\\","Æ");
-						line=line.replace("\\X2\\00C7\\X0\\","Ç");
-						line=line.replace("\\X2\\00C8\\X0\\","È");
-						line=line.replace("\\X2\\00C9\\X0\\","É");
-						line=line.replace("\\X2\\00CA\\X0\\","Ê");
-						line=line.replace("\\X2\\00CB\\X0\\","Ë");
-						line=line.replace("\\X2\\00CC\\X0\\","Ì");
-						line=line.replace("\\X2\\00CD\\X0\\","Í");
-						line=line.replace("\\X2\\00CE\\X0\\","Î");
-						line=line.replace("\\X2\\00CF\\X0\\","Ï");
-						
-						line=line.replace("\\X2\\00D0\\X0\\","Ð");
-						line=line.replace("\\X2\\00D1\\X0\\","Ñ");
-						line=line.replace("\\X2\\00D2\\X0\\","Ò");
-						line=line.replace("\\X2\\00D3\\X0\\","Ó");
-						line=line.replace("\\X2\\00D4\\X0\\","Ô");
-						line=line.replace("\\X2\\00D5\\X0\\","Õ");
-						line=line.replace("\\X2\\00D6\\X0\\","Ö");
-						line=line.replace("\\X2\\00D7\\X0\\","×");
-						line=line.replace("\\X2\\00D8\\X0\\","Ø");
-						line=line.replace("\\X2\\00D9\\X0\\","Ù");
-						line=line.replace("\\X2\\00DA\\X0\\","Ú");
-						line=line.replace("\\X2\\00DB\\X0\\","Û");
-						line=line.replace("\\X2\\00DC\\X0\\","Ü");
-						line=line.replace("\\X2\\00DD\\X0\\","Ý");
-						line=line.replace("\\X2\\00DE\\X0\\","Þ");
-						line=line.replace("\\X2\\00DF\\X0\\","ß");
-						
-						line=line.replace("\\X2\\00E0\\X0\\","à");
-						line=line.replace("\\X2\\00E1\\X0\\","á");
-						line=line.replace("\\X2\\00E2\\X0\\","â");
-						line=line.replace("\\X2\\00E3\\X0\\","ã");
-						line=line.replace("\\X2\\00E4\\X0\\","ä");
-						line=line.replace("\\X2\\00E5\\X0\\","å");
-						line=line.replace("\\X2\\00E6\\X0\\","æ");						
-						line=line.replace("\\X2\\00E7\\X0\\","ç");
-						line=line.replace("\\X2\\00E8\\X0\\","è");
-						line=line.replace("\\X2\\00E9\\X0\\","é");
-						line=line.replace("\\X2\\00EA\\X0\\","ê");
-						line=line.replace("\\X2\\00EB\\X0\\","ê");
-						line=line.replace("\\X2\\00EC\\X0\\","ì");
-						line=line.replace("\\X2\\00ED\\X0\\","í");
-						line=line.replace("\\X2\\00EE\\X0\\","î");
-						line=line.replace("\\X2\\00EF\\X0\\","ï");
-						
-						line=line.replace("\\X2\\00F0\\X0\\","ð");
-						line=line.replace("\\X2\\00F1\\X0\\","ñ");
-						line=line.replace("\\X2\\00F2\\X0\\","ò");
-						line=line.replace("\\X2\\00F3\\X0\\","ó");
-						line=line.replace("\\X2\\00F4\\X0\\","ô");
-						line=line.replace("\\X2\\00F5\\X0\\","õ");
-						line=line.replace("\\X2\\00F6\\X0\\","ö");
-						line=line.replace("\\X2\\00F7\\X0\\","÷");
-						line=line.replace("\\X2\\00F8\\X0\\","ø");
-						line=line.replace("\\X2\\00F9\\X0\\","ù");
-						line=line.replace("\\X2\\00FA\\X0\\","ú");
-						line=line.replace("\\X2\\00FB\\X0\\","û");
-						line=line.replace("\\X2\\00FC\\X0\\","ü");
-						line=line.replace("\\X2\\00FD\\X0\\","ý");
-						line=line.replace("\\X2\\00FE\\X0\\","þ");
-						line=line.replace("\\X2\\00FF\\X0\\","ÿ");
-						
-						line=line.replace("\\","\\\\");
-						line=line.replace("\\\\\"","\\\"");
+						line = line.replace("\\X2\\00C0\\X0\\", "À");
+						line = line.replace("\\X2\\00C1\\X0\\", "Á");
+						line = line.replace("\\X2\\00C2\\X0\\", "Â");
+						line = line.replace("\\X2\\00C3\\X0\\", "Ã");
+						line = line.replace("\\X2\\00C4\\X0\\", "Ä");
+						line = line.replace("\\X2\\00C5\\X0\\", "Å");
+						line = line.replace("\\X2\\00C6\\X0\\", "Æ");
+						line = line.replace("\\X2\\00C7\\X0\\", "Ç");
+						line = line.replace("\\X2\\00C8\\X0\\", "È");
+						line = line.replace("\\X2\\00C9\\X0\\", "É");
+						line = line.replace("\\X2\\00CA\\X0\\", "Ê");
+						line = line.replace("\\X2\\00CB\\X0\\", "Ë");
+						line = line.replace("\\X2\\00CC\\X0\\", "Ì");
+						line = line.replace("\\X2\\00CD\\X0\\", "Í");
+						line = line.replace("\\X2\\00CE\\X0\\", "Î");
+						line = line.replace("\\X2\\00CF\\X0\\", "Ï");
+
+						line = line.replace("\\X2\\00D0\\X0\\", "Ð");
+						line = line.replace("\\X2\\00D1\\X0\\", "Ñ");
+						line = line.replace("\\X2\\00D2\\X0\\", "Ò");
+						line = line.replace("\\X2\\00D3\\X0\\", "Ó");
+						line = line.replace("\\X2\\00D4\\X0\\", "Ô");
+						line = line.replace("\\X2\\00D5\\X0\\", "Õ");
+						line = line.replace("\\X2\\00D6\\X0\\", "Ö");
+						line = line.replace("\\X2\\00D7\\X0\\", "×");
+						line = line.replace("\\X2\\00D8\\X0\\", "Ø");
+						line = line.replace("\\X2\\00D9\\X0\\", "Ù");
+						line = line.replace("\\X2\\00DA\\X0\\", "Ú");
+						line = line.replace("\\X2\\00DB\\X0\\", "Û");
+						line = line.replace("\\X2\\00DC\\X0\\", "Ü");
+						line = line.replace("\\X2\\00DD\\X0\\", "Ý");
+						line = line.replace("\\X2\\00DE\\X0\\", "Þ");
+						line = line.replace("\\X2\\00DF\\X0\\", "ß");
+
+						line = line.replace("\\X2\\00E0\\X0\\", "à");
+						line = line.replace("\\X2\\00E1\\X0\\", "á");
+						line = line.replace("\\X2\\00E2\\X0\\", "â");
+						line = line.replace("\\X2\\00E3\\X0\\", "ã");
+						line = line.replace("\\X2\\00E4\\X0\\", "ä");
+						line = line.replace("\\X2\\00E5\\X0\\", "å");
+						line = line.replace("\\X2\\00E6\\X0\\", "æ");
+						line = line.replace("\\X2\\00E7\\X0\\", "ç");
+						line = line.replace("\\X2\\00E8\\X0\\", "è");
+						line = line.replace("\\X2\\00E9\\X0\\", "é");
+						line = line.replace("\\X2\\00EA\\X0\\", "ê");
+						line = line.replace("\\X2\\00EB\\X0\\", "ê");
+						line = line.replace("\\X2\\00EC\\X0\\", "ì");
+						line = line.replace("\\X2\\00ED\\X0\\", "í");
+						line = line.replace("\\X2\\00EE\\X0\\", "î");
+						line = line.replace("\\X2\\00EF\\X0\\", "ï");
+
+						line = line.replace("\\X2\\00F0\\X0\\", "ð");
+						line = line.replace("\\X2\\00F1\\X0\\", "ñ");
+						line = line.replace("\\X2\\00F2\\X0\\", "ò");
+						line = line.replace("\\X2\\00F3\\X0\\", "ó");
+						line = line.replace("\\X2\\00F4\\X0\\", "ô");
+						line = line.replace("\\X2\\00F5\\X0\\", "õ");
+						line = line.replace("\\X2\\00F6\\X0\\", "ö");
+						line = line.replace("\\X2\\00F7\\X0\\", "÷");
+						line = line.replace("\\X2\\00F8\\X0\\", "ø");
+						line = line.replace("\\X2\\00F9\\X0\\", "ù");
+						line = line.replace("\\X2\\00FA\\X0\\", "ú");
+						line = line.replace("\\X2\\00FB\\X0\\", "û");
+						line = line.replace("\\X2\\00FC\\X0\\", "ü");
+						line = line.replace("\\X2\\00FD\\X0\\", "ý");
+						line = line.replace("\\X2\\00FE\\X0\\", "þ");
+						line = line.replace("\\X2\\00FF\\X0\\", "ÿ");
+
+						line = line.replace("\\", "\\\\");
+						line = line.replace("\\\\\"", "\\\"");
 
 						if (line.contains("inst:IfcFace"))
 							continue;
@@ -1068,7 +1097,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 				try {
 					in = IFCtoLBDConverter_BIM4Ren.class.getResourceAsStream("/resources/" + ontology_file);
 					if (in == null)
-						in = IFCtoLBDConverter_BIM4Ren.class.getResourceAsStream("/" + ontology_file);
+						in = IFCtoLBDConverter_BIM4Ren.class.getResourceAsStream(ontology_file);
 				} catch (Exception e) {
 					e.printStackTrace();
 					return;
@@ -1160,34 +1189,48 @@ public class IFCtoLBDConverter_BIM4Ren {
 	}
 
 	public Model convert_SOT(Model model, String ontology_URI) {
+		InputStream SOT_inputStream = this.getClass().getResourceAsStream("/alignment/Core/SOT/SOT---IFC.ttl");
+		String ontology_txt = null;
+		try {
+			Path ontology_tempFile = Files.createTempFile(null, null);
+			ontology_txt = IOUtils.toString(SOT_inputStream, StandardCharsets.UTF_8.name());
+			ontology_txt = setIFC_NS(ontology_txt, ontology_URI);
+			Files.write(ontology_tempFile, ontology_txt.getBytes(StandardCharsets.UTF_8));
+			InputStream SOT_tmpinputStream = new FileInputStream(ontology_tempFile.toFile());
+			RDFDataMgr.read(model, SOT_inputStream, Lang.TTL);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		String rule_txt = null;
+		try {
 
-			String rule_txt=null;
-			try {
+			InputStream IFCtoSOT_inputStream = this.getClass().getResourceAsStream("/alignment/Core/SOT/IFCtoSOT.swrl");
+			rule_txt = IOUtils.toString(IFCtoSOT_inputStream, StandardCharsets.UTF_8.name());
+			Path tempFile = Files.createTempFile(null, null);
+			rule_txt = setIFC_NS(rule_txt, ontology_URI);
+			Files.write(tempFile, rule_txt.getBytes(StandardCharsets.UTF_8));
 
-				InputStream IFCtoSOT_inputStream = this.getClass()
-						.getResourceAsStream("/alignment/Core/SOT/IFCtoSOT.swrl");
-				rule_txt = IOUtils.toString(IFCtoSOT_inputStream, StandardCharsets.UTF_8.name());
-				Path tempFile = Files.createTempFile(null, null);
-				rule_txt=setIFC_NS(rule_txt, ontology_URI);
-				Files.write(tempFile, rule_txt.getBytes(StandardCharsets.UTF_8));
-				
-				
-				List rules = Rule.rulesFromURL(tempFile.toFile().getAbsolutePath());
-				System.out.println("rules: " + rules.size());
-				GenericRuleReasoner reasoner = new GenericRuleReasoner(rules);
+			List rules = Rule.rulesFromURL(tempFile.toFile().getAbsolutePath());
+			System.out.println("rules: " + rules.size());
+			GenericRuleReasoner reasoner = new GenericRuleReasoner(rules);
+			System.out.println("rules 1");
 
-				InfModel inf = ModelFactory.createInfModel(reasoner, model);
+			InfModel inf = ModelFactory.createInfModel(reasoner, model);
+			System.out.println("rules 2");
 
-				final Model deductions = ModelFactory.createDefaultModel();
-				inf.listStatements().forEachRemaining(st -> {
-					if (!model.contains(st))
-						deductions.add(st);
-				});
-				return deductions;
+			final Model deductions = ModelFactory.createDefaultModel();
+			System.out.println("rules 3");
+			inf.listStatements().forEachRemaining(st -> {
+				System.out.println("rules statements: " + st);
+				if (!model.contains(st))
+					deductions.add(st);
+			});
+			System.out.println("rules done");
+			return deductions;
 
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return model;
 	}

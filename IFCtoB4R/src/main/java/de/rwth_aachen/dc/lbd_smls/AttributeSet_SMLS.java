@@ -91,33 +91,68 @@ public class AttributeSet_SMLS {
 				RDFNode ifc_measurement_type = this.mapPnameType.get(pname);
 				if (ifc_measurement_type != null) {
 					String unit = ifc_measurement_type.asResource().getLocalName().toLowerCase();
-					if (unit.startsWith("ifc"))
-						unit = unit.substring(3);
-					if (unit.startsWith("positive"))
-						unit = unit.substring("positive".length());
-					if (unit.endsWith("measure"))
-						unit = unit.substring(0, unit.length() - "measure".length());
-					String si_unit = this.unitmap.get(unit);
-					if (si_unit != null) {
-						Resource bn = lbd_resource.getModel().createResource();
-						lbd_resource.addProperty(property, bn);
+						if (unit.startsWith("ifc"))
+							unit = unit.substring(3);
+						if (unit.startsWith("positive"))
+							unit = unit.substring("positive".length());
+						if (unit.endsWith("measure"))
+							unit = unit.substring(0, unit.length() - "measure".length());
+						String si_unit = this.unitmap.get(unit);
+						System.out.println("ATTR SI UNIT: " + si_unit + " " + unit);
+						if (si_unit != null) {
+							Resource bn = lbd_resource.getModel().createResource();
+							lbd_resource.addProperty(property, bn);
 
-						bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
-						if (si_unit.equals("METRE")) {
-							bn.addProperty(SMLS.unit, UNIT.METER);
-						} else if (si_unit.equals("SQUARE_METRE")) {
-							bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE);
-							Resource bn_accuracy = lbd_resource.getModel().createResource();
-						} 
-						else if (si_unit.equals("CUBIC_METRE")) {
-							bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE);
-						} 
-						else if (si_unit.equals("RADIAN")) {
-							bn.addProperty(SMLS.unit, UNIT.RADIAN);
-						} 
-					} else {
-						lbd_resource.addProperty(property, this.mapPnameValue.get(pname));
-					}
+							if (si_unit.equals("METRE")) {
+								bn.addProperty(SMLS.unit, UNIT.METER);
+							} else if (si_unit.equals("SQUARE_METRE")) {
+								bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE);
+								Resource bn_accuracy = lbd_resource.getModel().createResource();
+							} else if (si_unit.equals("CUBIC_METRE")) {
+								bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE);
+							} else if (si_unit.equals("MILLI METRE")) {
+								bn.addProperty(SMLS.unit, UNIT.MILLI_METER);
+							} else if (si_unit.equals("MILLI SQUARE_METRE")) {
+								bn.addProperty(SMLS.unit, UNIT.SQUARE_MILLI_METRE);
+								Resource bn_accuracy = lbd_resource.getModel().createResource();
+							} else if (si_unit.equals("MILLI CUBIC_METRE")) {
+								bn.addProperty(SMLS.unit, UNIT.CUBIC_MILLI_METER);
+							} else if (si_unit.equals("RADIAN")) {
+								bn.addProperty(SMLS.unit, UNIT.RADIAN);
+							}
+
+							bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
+
+						} else {
+							
+							
+							if (unit.equals("length")) {
+								Resource bn = lbd_resource.getModel().createResource();
+								lbd_resource.addProperty(property, bn);
+								bn.addProperty(SMLS.unit, UNIT.MILLI_METER);     // Default named in: https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcmeasureresource/lexical/ifclengthmeasure.htm
+								
+								bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
+
+							} else 	if (unit.equals("area")) {
+								Resource bn = lbd_resource.getModel().createResource();
+								lbd_resource.addProperty(property, bn);
+								bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE);   // default named in: https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcmeasureresource/lexical/ifcareameasure.htm
+								
+								bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
+
+							} else if (unit.equals("volume")) {
+								Resource bn = lbd_resource.getModel().createResource();
+								lbd_resource.addProperty(property, bn);
+								bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE);   // default named in: https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcmeasureresource/lexical/ifcvolumemeasure.htm
+								
+								bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
+
+							} 
+							else
+								lbd_resource.addProperty(property, this.mapPnameValue.get(pname));
+
+						}
+					
 				}
 			}
 	}

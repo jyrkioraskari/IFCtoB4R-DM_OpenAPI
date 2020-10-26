@@ -87,7 +87,6 @@ public class PropertySet_B4R {
 		this.lbd_model = lbd_model;
 		this.propertyset_name = propertyset_name;
 	}
-	
 
 	public void putPnameValue(String property_name, RDFNode value) {
 		property_name = org.apache.commons.lang3.StringUtils.stripAccents(property_name);
@@ -95,7 +94,7 @@ public class PropertySet_B4R {
 	}
 
 	public void putPnameType(String property_name, RDFNode type) {
-		System.out.println("property name: "+property_name);
+		System.out.println("property name: " + property_name);
 		property_name = org.apache.commons.lang3.StringUtils.stripAccents(property_name);
 		mapPnameType.put(StringOperations.toCamelCase(property_name), type);
 	}
@@ -116,7 +115,7 @@ public class PropertySet_B4R {
 				StmtIterator iterProp = prop.listProperties(PROPS.namePset);
 				while (iterProp.hasNext()) {
 					Literal psetPropName = iterProp.next().getLiteral();
-					System.out.println("XXXXX "+psetPropName +" - "+ pname);
+					// System.out.println("XXXXX "+psetPropName +" - "+ pname);
 					if (psetPropName.getString().equals(pname))
 						mapBSDD.put(StringOperations.toCamelCase(property.toString()), prop);
 					else {
@@ -150,7 +149,7 @@ public class PropertySet_B4R {
 
 					if (mapBSDD.get(pname) != null)
 						bn.addProperty(RDFS.seeAlso, mapBSDD.get(pname));
-					
+
 					bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
 
 					String si_unit = ifc_unit.asResource().getLocalName();
@@ -159,8 +158,16 @@ public class PropertySet_B4R {
 							bn.addProperty(SMLS.unit, UNIT.METER);
 						} else if (si_unit.equals("SQUARE_METRE")) {
 							bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE);
+							Resource bn_accuracy = lbd_resource.getModel().createResource();
 						} else if (si_unit.equals("CUBIC_METRE")) {
 							bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE);
+						} else if (si_unit.equals("MILLI METRE")) {
+							bn.addProperty(SMLS.unit, UNIT.MILLI_METER);
+						} else if (si_unit.equals("MILLI SQUARE_METRE")) {
+							bn.addProperty(SMLS.unit, UNIT.SQUARE_MILLI_METRE);
+							Resource bn_accuracy = lbd_resource.getModel().createResource();
+						} else if (si_unit.equals("MILLI CUBIC_METRE")) {
+							bn.addProperty(SMLS.unit, UNIT.CUBIC_MILLI_METER);
 						} else if (si_unit.equals("RADIAN")) {
 							bn.addProperty(SMLS.unit, UNIT.RADIAN);
 						}
@@ -177,6 +184,8 @@ public class PropertySet_B4R {
 						if (unit.endsWith("measure"))
 							unit = unit.substring(0, unit.length() - "measure".length());
 						String si_unit = this.unitmap.get(unit);
+						System.out.println("ATTR SI UNIT: " + si_unit + "unit " + unit);
+
 						Resource bn = lbd_resource.getModel().createResource();
 						lbd_resource.addProperty(property, bn);
 
@@ -190,30 +199,63 @@ public class PropertySet_B4R {
 								bn.addProperty(SMLS.unit, UNIT.METER);
 							} else if (si_unit.equals("SQUARE_METRE")) {
 								bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE);
+								Resource bn_accuracy = lbd_resource.getModel().createResource();
 							} else if (si_unit.equals("CUBIC_METRE")) {
 								bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE);
+							} else if (si_unit.equals("MILLI METRE")) {
+								bn.addProperty(SMLS.unit, UNIT.MILLI_METER);
+							} else if (si_unit.equals("MILLI SQUARE_METRE")) {
+								bn.addProperty(SMLS.unit, UNIT.SQUARE_MILLI_METRE);
+								Resource bn_accuracy = lbd_resource.getModel().createResource();
+							} else if (si_unit.equals("MILLI CUBIC_METRE")) {
+								bn.addProperty(SMLS.unit, UNIT.CUBIC_MILLI_METER);
 							} else if (si_unit.equals("RADIAN")) {
 								bn.addProperty(SMLS.unit, UNIT.RADIAN);
 							}
+
+						} else {
+							if (unit.equals("length")) {
+								lbd_resource.addProperty(property, bn);
+								bn.addProperty(SMLS.unit, UNIT.MILLI_METER); // Default named in:
+																				// https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcmeasureresource/lexical/ifclengthmeasure.htm
+
+								bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
+
+							} else if (unit.equals("area")) {
+								lbd_resource.addProperty(property, bn);
+								bn.addProperty(SMLS.unit, UNIT.SQUARE_METRE); // default named in:
+																				// https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcmeasureresource/lexical/ifcareameasure.htm
+
+								bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
+
+							} else if (unit.equals("volume")) {
+								lbd_resource.addProperty(property, bn);
+								bn.addProperty(SMLS.unit, UNIT.CUBIC_METRE); // default named in:
+																				// https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcmeasureresource/lexical/ifcvolumemeasure.htm
+
+								bn.addProperty(RDF.value, this.mapPnameValue.get(pname));
+
+							} 
+
 						}
 					}
 				}
 			}
 	}
-	
-	 public Optional<Boolean> isExternal() {
 
-	        RDFNode val = this.mapPnameValue.get("isExternal");
+	public Optional<Boolean> isExternal() {
 
-	        if (val == null)
-	            return Optional.empty();
-	        else {
-	            if (!val.isLiteral())
-	                return Optional.empty();
-	            if (val.asLiteral().getValue().equals(true))
-	                return Optional.of(true);
-	            else
-	                return Optional.of(false);
-	        }
-	    }
+		RDFNode val = this.mapPnameValue.get("isExternal");
+
+		if (val == null)
+			return Optional.empty();
+		else {
+			if (!val.isLiteral())
+				return Optional.empty();
+			if (val.asLiteral().getValue().equals(true))
+				return Optional.of(true);
+			else
+				return Optional.of(false);
+		}
+	}
 }

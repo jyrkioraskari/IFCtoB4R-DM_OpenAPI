@@ -164,7 +164,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 				});
 			});
 		} else {
-			IfcOWLUtils.listBuilding(ifcOWL, ifcowl_model,this.lbd_general_output_model).stream().map(rn -> rn.asResource()).forEach(building -> {
+			IfcOWLUtils.listBuildings(ifcOWL, ifcowl_model,this.lbd_general_output_model).stream().map(rn -> rn.asResource()).forEach(building -> {
 				handleBuilding(building);
 			});
 		}
