@@ -28,6 +28,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.InfModel;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
@@ -43,6 +48,7 @@ import org.apache.jena.reasoner.rulesys.GenericRuleReasoner;
 import org.apache.jena.reasoner.rulesys.Rule;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.sparql.core.DatasetImpl;
 import org.apache.jena.vocabulary.OWL;
 import org.apache.jena.vocabulary.RDF;
 import org.apache.jena.vocabulary.RDFS;
@@ -63,10 +69,12 @@ import de.rwth_aachen.dc.lbd_smls.ns.OPM;
 import de.rwth_aachen.dc.lbd_smls.ns.PROPS;
 import de.rwth_aachen.dc.lbd_smls.ns.Product;
 import de.rwth_aachen.dc.lbd_smls.ns.SMLS;
+import de.rwth_aachen.dc.lbd_smls.ns.SOT;
 import de.rwth_aachen.dc.lbd_smls.ns.UNIT;
 import de.rwth_aachen.dc.lbd_smls.utils.FileUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.IfcOWLUtils;
 import de.rwth_aachen.dc.lbd_smls.utils.RDFUtils;
+import de.rwth_aachen.dc.lbd_smls.utils.rdfpath.InvRDFStep;
 import de.rwth_aachen.dc.lbd_smls.utils.rdfpath.RDFStep;
 
 /*
@@ -122,21 +130,19 @@ public class IFCtoLBDConverter_BIM4Ren {
 		} catch (RenderEngineException | DeserializeException | IOException e) {
 			e.printStackTrace();
 		}
-
 		ontology_model = ModelFactory.createDefaultModel();
 		String ifc_model_file_base = ifc_filename.substring(0, ifc_filename.lastIndexOf("."));
 
 		ifcowl_model = readAndConvertIFC(ifc_filename, uriBase); // Before: readInOntologies(ifc_filename);
 
-		writeModel(ifcowl_model, ifc_model_file_base + "_ifcowl_model.ttl");
 		System.out.println("read ontologies");
 		readInOntologies(ifc_filename);
+		writeModel(ifcowl_model, ifc_model_file_base + "_ifcowl_model.ttl");
 		System.out.println("create product mapping");
 		createIfcLBDProductMapping();
 		System.out.println("pmapping done");
 
 		this.lbd_general_output_model = ModelFactory.createDefaultModel();
-		// ifcowl_model.add(convert_SOT(ifcowl_model, this.ontURI.get()));
 		// writeModel(ifcowl_model, ifc_model_file_base + "_ifcowl_model.ttl");
 		addNamespaces(uriBase);
 
@@ -150,6 +156,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 		handlePropertySetData();
 		System.out.println("execution");
 		execution();
+		
+		convert_SOT();
 		writeModel(lbd_general_output_model, ifc_model_file_base + "_BOT_SMLS_model.ttl");
 		return lbd_general_output_model;
 	}
@@ -195,7 +203,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 			IfcOWLUtils.listBuildings(site, ifcOWL).stream().map(rn -> rn.asResource()).forEach(building -> {
 				if (!RDFUtils.getType(building.asResource()).get().getURI().endsWith("#IfcBuilding")) {
-					System.err.println("Not an #IfcBuilding");
+					System.err.println("Not an #IfcBuilding"); //TODO right
 					return;
 				}
 				System.out.println("Building: " + building.asResource().getURI());
@@ -626,6 +634,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 				ps = "batid";
 			final String property_string = ps; // Just to make variable final (needed in the following stream)
 			if (atype.isPresent()) {
+				if(atype.get().getLocalName()==null)
+				   System.out.println("atype: "+atype.get());
 				if (atype.get().getLocalName().equals("IfcLabel")) {
 					attr.listProperties(ifcOWL.getHasString()).forEachRemaining(attr_s -> {
 						if (attr_s.getObject().isLiteral()
@@ -827,7 +837,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			IfcSpfReader rj = new IfcSpfReader();
 			File tempFile = File.createTempFile("ifc", ".ttl");
 			try {
-				Model m = ModelFactory.createDefaultModel();// createOntologyModel(OntModelSpec.RDFS_MEM_RDFS_INF); //
+				Model m = ModelFactory.createDefaultModel(); //
 															// super slow
 				m.setNsPrefix("rdf", RDF.uri);
 				m.setNsPrefix("rdfs", RDFS.uri);
@@ -851,7 +861,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 		}
 		System.out.println("IFC-RDF conversion not done");
-		return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
+		return ModelFactory.createDefaultModel();
 	}
 
 	private File filterContent(File whole_content_file) {
@@ -1187,20 +1197,53 @@ public class IFCtoLBDConverter_BIM4Ren {
 		});
 
 	}
+	
+	
+	private Map<String, Resource> ifcowl_sot_map = new HashMap<>();
 
-	public Model convert_SOT(Model model, String ontology_URI) {
+
+	public void convert_SOT() {
+		IfcOWLUtils.listIfcRelConnectsPorts(ifcOWL, ifcowl_model).stream().map(rn -> rn.asResource()).forEach(cp ->
+		{
+			System.out.println("cp: "+cp);
+			RDFStep[] connected_flowsegment_path1 = { new RDFStep(ifcOWL.getRelatingPort_IfcRelConnectsPorts()),new InvRDFStep(ifcOWL.getRelatingPort_IfcRelConnectsPortToElement()),new RDFStep(ifcOWL.getRelatedElement_IfcRelConnectsPortToElement()) };
+			RDFStep[] connected_flowsegment_path2 = { new RDFStep(ifcOWL.getRelatedPort_IfcRelConnectsPorts()),new InvRDFStep(ifcOWL.getRelatingPort_IfcRelConnectsPortToElement()),new RDFStep(ifcOWL.getRelatedElement_IfcRelConnectsPortToElement()) };
+
+			List<RDFNode> flowsegments1 = RDFUtils.pathQuery(cp, connected_flowsegment_path1);
+			List<RDFNode> flowsegments2 = RDFUtils.pathQuery(cp, connected_flowsegment_path2);
+			
+			if(flowsegments1.size()>0 && flowsegments2.size()>0)
+			{
+				Resource ifc1=flowsegments1.get(0).asResource();
+				Resource ifc2=flowsegments2.get(0).asResource();
+				
+				Resource s1=ifcowl_sot_map.get(ifc1.getURI());
+				if(s1==null)
+				{
+					s1=lbd_general_output_model.createResource();
+					ifcowl_sot_map.put(ifc1.getURI(),s1);
+				}
+				
+				Resource s2=ifcowl_sot_map.get(ifc2.getURI());
+				if(s2==null)
+				{
+					s2=lbd_general_output_model.createResource();
+					ifcowl_sot_map.put(ifc2.getURI(),s2);
+				}
+				s1.addProperty(RDF.type,SOT.SystemComponent);
+				s1.addProperty(OWL.sameAs, ifc1);
+				
+				s2.addProperty(RDF.type,SOT.SystemComponent);
+				s2.addProperty(OWL.sameAs, ifc2);
+				s1.addProperty(SOT.connectedWith, s2);
+			}
+
+		});
+	}
+	
+	public Model analyse_SOT1(Model ifcowl_model, String ontology_URI) {
+
 		InputStream SOT_inputStream = this.getClass().getResourceAsStream("/alignment/Core/SOT/SOT---IFC.ttl");
-		String ontology_txt = null;
-		try {
-			Path ontology_tempFile = Files.createTempFile(null, null);
-			ontology_txt = IOUtils.toString(SOT_inputStream, StandardCharsets.UTF_8.name());
-			ontology_txt = setIFC_NS(ontology_txt, ontology_URI);
-			Files.write(ontology_tempFile, ontology_txt.getBytes(StandardCharsets.UTF_8));
-			InputStream SOT_tmpinputStream = new FileInputStream(ontology_tempFile.toFile());
-			RDFDataMgr.read(model, SOT_inputStream, Lang.TTL);
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
 		String rule_txt = null;
 		try {
 
@@ -1214,27 +1257,159 @@ public class IFCtoLBDConverter_BIM4Ren {
 			System.out.println("rules: " + rules.size());
 			GenericRuleReasoner reasoner = new GenericRuleReasoner(rules);
 			System.out.println("rules 1");
+			
+			Path ontology_tempFile = Files.createTempFile(null, null);
+			//Model local_ontology_model=ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM_TRANS_INF); // Does not work
+			Model local_ontology_model=ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM_RDFS_INF);  //RDFS_MEM_RDFS_INF
+			
+			Resource sot_System= local_ontology_model.createResource("http://www.bim4ren.eu/sot#System");
+			Resource sot_SystemComponent= local_ontology_model.createResource("http://www.bim4ren.eu/sot#SystemComponent");
+			Resource sot_TransportElement= local_ontology_model.createResource("http://www.bim4ren.eu/sot#TransportElement");
+			Resource sot_TerminalElement= local_ontology_model.createResource("http://www.bim4ren.eu/sot#TerminalElement");
+			
+			Property sot_hasElements = local_ontology_model.createProperty("http://www.bim4ren.eu/sot#hasElements");
+			
+							
 
-			InfModel inf = ModelFactory.createInfModel(reasoner, model);
+			//local_ontology_model.add(")
+			
+			
+			//Model local_ontology_model=ModelFactory.createRDFSModel(ifcowl_model);  
+			
+			String ontology_txt = IOUtils.toString(SOT_inputStream, StandardCharsets.UTF_8.name());
+			ontology_txt = setIFC_NS(ontology_txt, ontology_URI);
+			Files.write(ontology_tempFile, ontology_txt.getBytes(StandardCharsets.UTF_8));
+			InputStream SOT_tmpinputStream = new FileInputStream(ontology_tempFile.toFile());
+			RDFDataMgr.read(local_ontology_model, SOT_inputStream, Lang.TTL);
+			//reasoner.bindSchema(ontology);
+			
+			
+			local_ontology_model.add(ifcowl_model);
+			/*
+			String query = 
+					"PREFIX owl: <http://www.w3.org/2002/07/owl#> \r\n" + 
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \r\n" + 
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \r\n" + 
+					"PREFIX sot: <http://www.bim4ren.eu/sot#> \r\n" + 
+					"PREFIX list: <https://w3id.org/list#> \r\n" + 
+					"PREFIX ifc: <http://standards.buildingsmart.org/IFC/DEV/IFC2x3/TC1/OWL#> \r\n" + 
+					"SELECT ?elt1  \n" + 
+					"       ?elt2 \n" + 
+					"WHERE\r\n" + 
+					"  {\r\n" + 
+					"   ?c rdf:type ifc:IfcRelConnectsPorts .\n" +
+					"   ?c ifc:relatingPort_IfcRelConnectsPorts ?p1 .\n" +
+					"   ?c ifc:relatedPort_IfcRelConnectsPorts ?p2 .\n" + 
+					"   ?elt1 rdf:type sot:SystemComponent .\n" +
+					"   ?elt2 rdf:type sot:SystemComponent .\n" + 
+					"	?n1 ifc:relatingObject_IfcRelNests ?elt1 .\n" +
+					"   ?n1 ifc:relatedObjects_IfcRelNests ?list1 .\n" +
+					"   ?p1 list:isIn ?list1 .\n" + 
+					"	?n2 ifc:relatingObject_IfcRelNests ?elt2 .\n" +
+					"   ?n2 ifc:relatedObjects_IfcRelNests ?list2 .\n" +
+					"   ?p2 list:isIn ?list2 .\n" + 
+					"	?rel ifc:relatingPort_IfcRelConnectsPorts ?p1 .\n" +
+				    "   ?rel ifc:relatedPort_IfcRelConnectsPorts ?p2 .\n" +
+					"  }";
+			
+*/
+			String query = 
+					"PREFIX owl: <http://www.w3.org/2002/07/owl#> \r\n" + 
+					"PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \r\n" + 
+					"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \r\n" + 
+					"PREFIX sot: <http://www.bim4ren.eu/sot#> \r\n" + 
+					"PREFIX list: <https://w3id.org/list#> \r\n" + 
+					"PREFIX ifc: <http://standards.buildingsmart.org/IFC/DEV/IFC2x3/TC1/OWL#> \r\n" + 
+					"SELECT ?c ?p1 ?p2  \n" + 
+					"WHERE\r\n" + 
+					"  {\r\n" + 
+					"   ?c rdf:type ifc:IfcRelConnectsPorts .\n" +
+					"   ?c ifc:relatingPort_IfcRelConnectsPorts ?p1 .\n" +
+					"   ?c ifc:relatedPort_IfcRelConnectsPorts ?p2 .\n" + 
+					"   ?elt1 rdf:type ifc:IfcDistributionElement .\n" +
+					"   ?elt2 rdf:type ifc:IfcDistributionElement .\n" +
+					"	?n1 ifc:relatingObject_IfcRelNests ?elt1 .\n" +
+					//"   ?n1 ifc:relatedObjects_IfcRelNests ?list1 .\n" +
+					//"   ?p1 list:isIn ?list1 .\n" + 
+					"	?n2 ifc:relatingObject_IfcRelNests ?elt2 .\n" +
+					//"   ?n2 ifc:relatedObjects_IfcRelNests ?list2 .\n" +
+					//"   ?p2 list:isIn ?list2 .\n" + 
+					//"	?rel ifc:relatingPort_IfcRelConnectsPorts ?p1 .\n" +
+				    //"   ?rel ifc:relatedPort_IfcRelConnectsPorts ?p2 .\n" +					
+					"  }";
+
 			System.out.println("rules 2");
-
-			final Model deductions = ModelFactory.createDefaultModel();
+			InfModel inference_model = ModelFactory.createInfModel(reasoner, local_ontology_model);
+			
+			 QueryExecution exec =  QueryExecutionFactory.create(QueryFactory.create(query), new
+					 DatasetImpl(inference_model));
+			 ResultSet results = exec.execSelect();
+			 System.out.println("results: "+results.hasNext());
+			 for ( ; results.hasNext() ; ) {
+			      QuerySolution soln = results.nextSolution() ;
+			      System.out.println("Solution: "+soln);
+			    }
+			 
+			Model result=ModelFactory.createDefaultModel();
+			result.add(inference_model);
+			writeModel(result,  "c:\\temp\\reasoned_ifcowl_ont_model.ttl"); 
+			
+			/*final Model deductions = ModelFactory.createDefaultModel();
 			System.out.println("rules 3");
 			inf.listStatements().forEachRemaining(st -> {
 				System.out.println("rules statements: " + st);
 				if (!model.contains(st))
 					deductions.add(st);
-			});
+			});*/
 			System.out.println("rules done");
-			return deductions;
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
-		return model;
+		// the results are given with a fresh new model
+		return ModelFactory.createDefaultModel();
 	}
 
+	public void analyse_SOT2(Model ifcowl_model, String ontology_URI) {
+
+		InputStream SOT_inputStream = this.getClass().getResourceAsStream("/alignment/Core/SOT/SOT---IFC.ttl");
+		String rule_txt = null;
+		try {
+
+			InputStream IFCtoSOT_inputStream = this.getClass().getResourceAsStream("/alignment/Core/SOT/IFCtoSOT.swrl");
+			rule_txt = IOUtils.toString(IFCtoSOT_inputStream, StandardCharsets.UTF_8.name());
+			Path tempFile = Files.createTempFile(null, null);
+			rule_txt = setIFC_NS(rule_txt, ontology_URI);
+			Files.write(tempFile, rule_txt.getBytes(StandardCharsets.UTF_8));
+
+			List rules = Rule.rulesFromURL(tempFile.toFile().getAbsolutePath());
+			System.out.println("rules: " + rules.size());
+			GenericRuleReasoner reasoner = new GenericRuleReasoner(rules);
+			System.out.println("rules 1");
+			
+			Path ontology_tempFile = Files.createTempFile(null, null);
+			Model local_ontology_model=ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM_RDFS_INF);  //RDFS_MEM_RDFS_INF
+			String ontology_txt = IOUtils.toString(SOT_inputStream, StandardCharsets.UTF_8.name());
+			ontology_txt = setIFC_NS(ontology_txt, ontology_URI);
+			Files.write(ontology_tempFile, ontology_txt.getBytes(StandardCharsets.UTF_8));
+			InputStream SOT_tmpinputStream = new FileInputStream(ontology_tempFile.toFile());
+			RDFDataMgr.read(local_ontology_model, SOT_inputStream, Lang.TTL);
+			//reasoner.bindSchema(ontology);
+			local_ontology_model.add(ifcowl_model);
+			System.out.println("rules 2");
+			InfModel inference_model = ModelFactory.createInfModel(reasoner, local_ontology_model);
+			
+			writeModel(inference_model,  "c:\\temp\\reasoned_ifcowl_ont_model.ttl"); 
+			System.out.println("rules done");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	
 	/* remove prefixed and translate https to http */
 	private String setIFC_NS(String txt, String ontology_URI) {
 		if (!ontology_URI.endsWith("#") && !ontology_URI.endsWith("/"))
@@ -1246,7 +1421,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 				String[] parts = l.split(" ");
 				if (parts[1].trim().equals("ifc:"))
 					sb.append("@prefix ifc: <" + ontology_URI + "> .\n");
+				else				if (parts[1].trim().equals("ifc4:"))
+					sb.append("@prefix ifc4: <" + ontology_URI + "> .\n");
 				else
+
 					sb.append(l + "\n");
 			} else {
 				sb.append(l + "\n");

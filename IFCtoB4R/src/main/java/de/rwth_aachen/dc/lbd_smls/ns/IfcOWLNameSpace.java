@@ -70,9 +70,27 @@ public class IfcOWLNameSpace extends abstract_NS {
 	
 	private final String ifcURI;
 	
+	
+	// HVAC
+	private final String IfcFlowSegment;
+	private final String IfcRelConnectsPorts;
+	private final String IfcRelConnectsPortToElement;
+	private final String IfcRelAssignsToGroup;
+
+	
+	private final Property relatedElement_IfcRelConnectsPortToElement;
+	private final Property relatingPort_IfcRelConnectsPortToElement;
+	
+	private final Property relatedObjects_IfcRelAssigns;
+	private final Property relatingGroup_IfcRelAssignsToGroup;
+
+	private final Property relatedPort_IfcRelConnectsPorts;
+	private final Property relatingPort_IfcRelConnectsPorts;
+
+	
 	public IfcOWLNameSpace(String ifcURI)
 	{
-		// There should be bo vocabulary that does not end in # or /.  This fixes possible errors
+		// There should be no vocabulary that does not end in # or /.  This fixes possible errors
 		if(!ifcURI.endsWith("#")&&!ifcURI.endsWith("/"))
 			ifcURI=ifcURI+"#";
 		this.ifcURI=ifcURI;
@@ -123,6 +141,21 @@ public class IfcOWLNameSpace extends abstract_NS {
 		SQUARE_METRE= ifcURI + "SQUARE_METRE";
 		CUBIC_METRE= ifcURI + "CUBIC_METRE";
 		RADIAN= ifcURI + "RADIAN";
+		
+		//HVAC
+		IfcRelConnectsPorts = ifcURI +"IfcRelConnectsPorts";
+		IfcRelConnectsPortToElement=ifcURI +"IfcRelConnectsPortToElement";
+		IfcFlowSegment=ifcURI + "IfcFlowSegment";
+		IfcRelAssignsToGroup=ifcURI + "IfcRelAssignsToGroup";
+		
+		relatedElement_IfcRelConnectsPortToElement=property(ifcURI, "relatedElement_IfcRelConnectsPortToElement");
+		relatingPort_IfcRelConnectsPortToElement=property(ifcURI, "relatingPort_IfcRelConnectsPortToElement");
+		
+		relatedObjects_IfcRelAssigns=property(ifcURI, "relatedObjects_IfcRelAssigns");
+		relatingGroup_IfcRelAssignsToGroup=property(ifcURI, "relatingGroup_IfcRelAssignsToGroup");
+
+		relatingPort_IfcRelConnectsPorts = property(ifcURI, "relatingPort_IfcRelConnectsPorts");
+		relatedPort_IfcRelConnectsPorts = property(ifcURI, "relatedPort_IfcRelConnectsPorts");
 	}
 	
 	
@@ -271,9 +304,70 @@ public class IfcOWLNameSpace extends abstract_NS {
 	}
 	
 	
+	//HVAC
+	
+	public String getIfcFlowSegment() {
+		return IfcFlowSegment;
+	}
+
+	public String getIfcRelConnectsPortToElement() {
+		return IfcRelConnectsPortToElement;
+	}
+
+
+
+	public String getIfcRelConnectsPorts() {
+		return IfcRelConnectsPorts;
+	}
+
+
+
+	public String getIfcRelAssignsToGroup() {
+		return IfcRelAssignsToGroup;
+	}
+
+
+    public Property getRelatedElement_IfcRelConnectsPortToElement() {
+		return relatedElement_IfcRelConnectsPortToElement;
+	}
+
+
+
+	public Property getRelatingPort_IfcRelConnectsPortToElement() {
+		return relatingPort_IfcRelConnectsPortToElement;
+	}
+
+
+
+	public Property getRelatedObjects_IfcRelAssigns() {
+		return relatedObjects_IfcRelAssigns;
+	}
+
+
+
+	public Property getRelatingGroup_IfcRelAssignsToGroup() {
+		return relatingGroup_IfcRelAssignsToGroup;
+	}
+
+
+
+	public Property getRelatingPort_IfcRelConnectsPorts() {
+		return relatingPort_IfcRelConnectsPorts;
+	}
+
+
+
+	public Property getRelatedPort_IfcRelConnectsPorts() {
+		return relatedPort_IfcRelConnectsPorts;
+	}
+
+
+
+	// Properties
 	static public Property getHasString() {
 		return hasString;
 	}
+	
 	public Property getHasDouble() {
 		return hasDouble;
 	}

@@ -410,6 +410,24 @@ public class IfcOWLUtils {
 		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcSIUnit()), path);
 	}
 
+
+	public static List<RDFNode> listIfcFlowSegments(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
+		RDFStep[] path = { new InvRDFStep(RDF.type) };
+		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcFlowSegment()), path);
+	}
+
+	
+	public static List<RDFNode> listIfcRelConnectsPortToElement(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
+		RDFStep[] path = { new InvRDFStep(RDF.type) };
+		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcRelConnectsPortToElement()), path);
+	}
+	
+
+	public static List<RDFNode> listIfcRelConnectsPorts(IfcOWLNameSpace ifcOWL, Model ifcowl_model) {
+		RDFStep[] path = { new InvRDFStep(RDF.type) };
+		return RDFUtils.pathQuery(ifcowl_model.getResource(ifcOWL.getIfcRelConnectsPorts()), path);
+	}
+	
 	/**
 	 * Returns list of all RDF nodes that are of type ifcOWL Ontology base URI +
 	 * IfcPropertySet on the RDF graph.

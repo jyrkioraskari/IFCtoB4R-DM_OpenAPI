@@ -135,7 +135,9 @@ public class RDFUtils {
 	 */
 	public static Optional<Resource> getType(Resource r) {
 		RDFStep[] path = { new RDFStep(RDF.type) };
-		return RDFUtils.pathQuery(r, path).stream().map(rn -> rn.asResource()).findAny();
+		// When ontology reasoning is used, some exotic types may be added
+		// To get the exac IFC type, ontlogy reasoned data should not be used here
+		return RDFUtils.pathQuery(r, path).stream().map(rn -> rn.asResource()).filter(x->x.getLocalName()!=null).findAny();
 	}
 
 }
