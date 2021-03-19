@@ -1,0 +1,6 @@
+@startuml
+MaestroBot  -> (Get BIM Bot services)
+MaestroBot  -> (Convert IFC to BIM4Ren data model)
+(Convert IFC to BIM4Ren data model) .> (Convert ifcOWL to -BIM4Ren data model) : include
+(Convert IFC to BIM4Ren data model) .> (Tranlate IFC to ifcOWL) : include
+@enduml

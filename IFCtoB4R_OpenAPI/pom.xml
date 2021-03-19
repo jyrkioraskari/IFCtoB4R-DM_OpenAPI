@@ -43,6 +43,27 @@
 						<configFile>src/conf/enunciate.xml</configFile>
 					</configuration>
 				</plugin>
+				<plugin>
+					<groupId>com.github.jeluard</groupId>
+					<artifactId>plantuml-maven-plugin</artifactId>
+					<version>1.2</version>
+					<configuration>
+						<sourceFiles>
+							<directory>${basedir}/src</directory>
+							<includes>
+								<include>uml/**/*.txt</include>
+							</includes>
+						</sourceFiles>
+						<outputDirectory>documentation</outputDirectory>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>net.sourceforge.plantuml</groupId>
+							<artifactId>plantuml</artifactId>
+							<version>8059</version>
+						</dependency>
+					</dependencies>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 	</build>

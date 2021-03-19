@@ -1,0 +1,36 @@
+@startuml
+[Maestro Bot] ..> HTTP 
+
+
+node "Docker Container" {
+ 
+
+node "Web Application server" {
+ 
+package "IFC to B4R Bot" {
+
+HTTP - [IFCtoB4R_OpenAPI]
+
+
+package "Libraries" {
+[IfcOpenShell]
+[Apache Jena]
+[Enunciate]
+[IFCtoRDF]
+[JAX-RS]
+}
+[IFCtoB4R_OpenAPI] - [IFCtoB4R Converter] 
+[IFCtoB4R Converter] ..> [IfcOpenShell]
+
+[IFCtoB4R Converter] ..> [Apache Jena]
+
+[IFCtoB4R_OpenAPI] - [Enunciate]
+[IFCtoB4R_OpenAPI] ..> [JAX-RS]
+[IFCtoB4R Converter] ..> [IFCtoRDF]
+
+
+}
+
+}
+}
+@enduml

@@ -1,0 +1,32 @@
+@startuml
+[Maestro Bot] ..> HTTP 
+
+
+ 
+ 
+package "B4R DM Conversion Service" {
+
+HTTP - [OpenAPI]
+
+
+package "Libraries" {
+[IfcOpenShell]
+[Apache Jena]
+[JAX-RS]
+[IFCtoRDF]
+}
+[OpenAPI] - [IFCtoB4R DM Converter] 
+[IFCtoB4R DM Converter] ..> [IfcOpenShell]
+[IFCtoB4R DM Converter] ..> [Apache Jena]
+
+
+[OpenAPI] ..> [JAX-RS]
+[IFCtoB4R DM Converter] ..> [IFCtoRDF]
+
+
+[OpenAPI] - [IfcOWL to B4R DM Converter] 
+[IfcOWL to B4R DM Converter] ..> [Apache Jena]
+
+
+}
+@enduml
