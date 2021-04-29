@@ -47,7 +47,7 @@
 		<dependency>
 			<groupId>com.thoughtworks.xstream</groupId>
 			<artifactId>xstream</artifactId>
-			<version>1.4.13-java7</version>
+			<version>1.4.16</version>
 		</dependency>
 
 		<dependency>
@@ -59,7 +59,7 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.6</version>
+			<version>2.7</version>
 		</dependency>
 
 		<dependency>
