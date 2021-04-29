@@ -48,7 +48,7 @@ public class IFCtoB4R_OpenAPI {
 		List<Service> services = new ArrayList<>();
 		System.out.println(uriInfo.getBaseUri().getHost());
 	    System.out.println(uriInfo.getBaseUri().getPort());
-		services.add(new Service("IFCtoB4R DM", "IFCtoB4R DM", "BIM4REN", null, "http://"+uriInfo.getBaseUri().getHost()+":"+uriInfo.getBaseUri().getPort()+"/api/convert_IFC-B4R", null, null));
+		services.add(new Service("IFCtoB4R DM", "IFCtoB4R DM", "BIM4REN", null, "http://"+uriInfo.getBaseUri().getHost()+"/IFCtoB4R_OpenAPI/api/convert_IFC-B4R", null, null));
 	    String json = new Gson().toJson(services);
 		return Response.ok(json, "application/json").build();
 
@@ -98,7 +98,8 @@ public class IFCtoB4R_OpenAPI {
 	 * 
 	 * @return Returnd RDF output. Formats are: JSON-LD, RDF/XML, and TTL
 	 */
-
+	@POST
+	@Path("/convert_IFC-B4R")
 	@Consumes({ MediaType.TEXT_PLAIN, "application/ifc" })
 	@Produces({ "text/turtle", "application/ld+json", "application/rdf+xml" })
 	public Response convertIFCtoB4Rn(@HeaderParam(HttpHeaders.ACCEPT) String accept_type, String ifc_step_content) {
@@ -162,7 +163,8 @@ public class IFCtoB4R_OpenAPI {
 	 * 
 	 * @return Returnd RDF output. Formats are: JSON-LD, RDF/XML, and TTL
 	 */
-
+	@POST
+	@Path("/convert_ifcOWL-B4R")
 	@Consumes({ MediaType.TEXT_PLAIN, "text/turtle"})
 	@Produces({ "text/turtle", "application/ld+json", "application/rdf+xml" })
 	public Response convertIfcOWLtoB4R(@HeaderParam(HttpHeaders.ACCEPT) String accept_type, String ifc_step_content) {

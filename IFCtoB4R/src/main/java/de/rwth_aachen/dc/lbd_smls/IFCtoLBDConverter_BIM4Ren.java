@@ -158,6 +158,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 		execution();
 		
 		convert_SOT();
+		//analyse_SOT2(ifcowl_model, this.ontURI.get());
 		writeModel(lbd_general_output_model, ifc_model_file_base + "_BOT_SMLS_model.ttl");
 		return lbd_general_output_model;
 	}
@@ -1142,7 +1143,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 		readInOntologyTTL(ontology_model, "psetdef.ttl");
 		List<String> files = FileUtils.getListofFiles("pset", ".ttl");
 		for (String file : files) {
-			file = file.substring(file.indexOf("pset"));
+			//file = file.substring(file.indexOf("Pset"));
 			file = file.replaceAll("\\\\", "/");
 			readInOntologyTTL(ontology_model, file);
 			System.out.println("read ontology file : " + file);
@@ -1203,6 +1204,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 
 
 	public void convert_SOT() {
+		long start_time=System.currentTimeMillis();
 		IfcOWLUtils.listIfcRelConnectsPorts(ifcOWL, ifcowl_model).stream().map(rn -> rn.asResource()).forEach(cp ->
 		{
 			System.out.println("cp: "+cp);
@@ -1239,6 +1241,8 @@ public class IFCtoLBDConverter_BIM4Ren {
 			}
 
 		});
+		long stop_time=System.currentTimeMillis();
+		System.out.println("Time in milliseconds: "+(stop_time-start_time));
 	}
 	
 	public Model analyse_SOT1(Model ifcowl_model, String ontology_URI) {
@@ -1372,7 +1376,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 	}
 
 	public void analyse_SOT2(Model ifcowl_model, String ontology_URI) {
-
+		long start_time=System.currentTimeMillis();
 		InputStream SOT_inputStream = this.getClass().getResourceAsStream("/alignment/Core/SOT/SOT---IFC.ttl");
 		String rule_txt = null;
 		try {
@@ -1389,7 +1393,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			System.out.println("rules 1");
 			
 			Path ontology_tempFile = Files.createTempFile(null, null);
-			Model local_ontology_model=ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM_RDFS_INF);  //RDFS_MEM_RDFS_INF
+			Model local_ontology_model=ModelFactory.createOntologyModel(OntModelSpec.OWL_LITE_MEM_RDFS_INF);  //RDFS_MEM_RDFS_INF   OWL_LITE_MEM_RDFS_INF
 			String ontology_txt = IOUtils.toString(SOT_inputStream, StandardCharsets.UTF_8.name());
 			ontology_txt = setIFC_NS(ontology_txt, ontology_URI);
 			Files.write(ontology_tempFile, ontology_txt.getBytes(StandardCharsets.UTF_8));
@@ -1398,10 +1402,18 @@ public class IFCtoLBDConverter_BIM4Ren {
 			//reasoner.bindSchema(ontology);
 			local_ontology_model.add(ifcowl_model);
 			System.out.println("rules 2");
+			final Model m = ModelFactory.createDefaultModel();
 			InfModel inference_model = ModelFactory.createInfModel(reasoner, local_ontology_model);
-			
-			writeModel(inference_model,  "c:\\temp\\reasoned_ifcowl_ont_model.ttl"); 
+			inference_model.listStatements().forEachRemaining(x->{
+				if(x.toString().contains("isIn"))
+				   m.add(x);
+			});
+			//writeModel(inference_model,  "c:\\temp\\reasoned_ifcowl_ont_model.ttl"); 
 			System.out.println("rules done");
+			long stop_time=System.currentTimeMillis();
+			System.out.println("Time in milliseconds: "+(stop_time-start_time));
+			m.write(System.out, "TTL");
+			System.exit(1);
 
 		} catch (Exception e) {
 			e.printStackTrace();

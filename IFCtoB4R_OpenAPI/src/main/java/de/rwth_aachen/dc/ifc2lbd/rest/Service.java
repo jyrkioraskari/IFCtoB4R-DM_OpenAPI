@@ -27,6 +27,8 @@ public class Service {
 		this.resourceUrl = resourceUrl;
 		this.authorizationUrl = authorizationUrl;
 		this.registerUrl = registerUrl;
+	    this.inputs.add("application/ifc");	
+	    this.outputs.add("application/ld+json");	
 	}
 	
 	public String getId() {

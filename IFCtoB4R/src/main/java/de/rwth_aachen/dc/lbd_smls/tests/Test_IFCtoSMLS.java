@@ -15,12 +15,16 @@ import com.google.common.eventbus.EventBus;
 
 import de.rwth_aachen.dc.lbd_smls.IFCtoLBDConverter_BIM4Ren;
 
-public class Sample_IFCtoSMLS {
+public class Test_IFCtoSMLS {
 
 	static private void extractLBD_SMLS(File ifcFile, StringBuilder result_string) {
+		long start=System.currentTimeMillis();
 		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
 		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset#");
+		long stop=System.currentTimeMillis();
 
+		System.out.println("Ajo;"+(stop-start));
+		/*
 		OutputStream ttl_output = new OutputStream() {
 			private StringBuilder string = new StringBuilder();
 
@@ -37,7 +41,10 @@ public class Sample_IFCtoSMLS {
 		m.write(ttl_output, "TTL");
 		writeModel(m, ifcFile+"_LBD.ttl"); 
 		// RDFDataMgr.write(ttl_output, m, RDFFormat.JSONLD_COMPACT_PRETTY);
+		 
 		result_string.append(ttl_output.toString());
+		*/
+		
 	}
 
 	public static void writeModel(Model m, String target_file) {
@@ -59,10 +66,18 @@ public class Sample_IFCtoSMLS {
 	}
 
 	public static void main(String[] args) {
-		String ifcFileName = "C:\\test\\bim4ren\\BIM4Ren_DUNANT_cleaned_IFC2x3.ifc";
+		//String ifcFileName = "C:\\test\\bim4ren\\BIM4Ren_DUNANT_cleaned_IFC2x3.ifc";
 		//String ifcFileName = "c:\\ifc3\\ifc\\SGD_Blueberry_Eng-HVAC-Plumbing-1.ifc";
+		String ifcFileName = "c:\\ifc\\Duplex_MEP_20110505.ifc";
 		File ifcFile = new File(ifcFileName);
 		StringBuilder result_string = new StringBuilder();
+		extractLBD_SMLS(ifcFile, result_string);
+		extractLBD_SMLS(ifcFile, result_string);
+		extractLBD_SMLS(ifcFile, result_string);
+		extractLBD_SMLS(ifcFile, result_string);
+		extractLBD_SMLS(ifcFile, result_string);
+		extractLBD_SMLS(ifcFile, result_string);
+		extractLBD_SMLS(ifcFile, result_string);
 		extractLBD_SMLS(ifcFile, result_string);
 		System.out.println(result_string.toString());
 	}

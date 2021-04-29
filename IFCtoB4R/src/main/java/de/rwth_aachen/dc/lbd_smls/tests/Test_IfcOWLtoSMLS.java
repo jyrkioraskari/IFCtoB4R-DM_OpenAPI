@@ -8,7 +8,7 @@ import org.apache.jena.rdf.model.Model;
 
 import de.rwth_aachen.dc.lbd_smls.IfcOWLtoLBDConverter_BIM4Ren;
 
-public class  Sample_IfcOWLtoSMLS{
+public class  Test_IfcOWLtoSMLS{
 	
 	static private void extractIfcOWLtoBD_SMLS(File ifcOwlFile, StringBuilder result_string) {
 		IfcOWLtoLBDConverter_BIM4Ren lbdconverter = new IfcOWLtoLBDConverter_BIM4Ren();

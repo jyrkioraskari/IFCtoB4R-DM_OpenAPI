@@ -770,54 +770,6 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 		return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
 	}
 
-	/**
-	 * 
-	 * The method converts an IFC STEP formatted file and returns an Apache Jena RDF
-	 * memory storage model that contains the generated RDF triples.
-	 * 
-	 * Apache Jena: https://jena.apache.org/index.html
-	 * 
-	 * The generated temporsary file is used to reduce the temporary memory need and
-	 * make it possible to convert larger models.
-	 * 
-	 * Sets the this.ontURI class variable. That is used to create the right ifcOWL
-	 * version based ontology base URI that is used to create the ifcOWL version
-	 * based peroperties and class URIs-
-	 * 
-	 * @param ifc_file the absolute path (For example: c:\ifcfiles\ifc_file.ifc) for
-	 *                 the IFC file
-	 * @param uriBase  the URL beginning for the elements in the ifcOWL TTL output
-	 * @return the Jena Model that contains the ifcOWL attribute value (Abox)
-	 *         output.
-	 */
-	public Model readAndConvertIFC(String ifc_file, String uriBase) {
-		try {
-			IfcSpfReader rj = new IfcSpfReader();
-			File tempFile = File.createTempFile("ifc", ".ttl");
-			try {
-				Model m = ModelFactory.createDefaultModel();
-				m.setNsPrefix("rdf", RDF.uri);
-				m.setNsPrefix("rdfs", RDFS.uri);
-				m.setNsPrefix("owl", OWL.getURI());
-				m.setNsPrefix("xsd", "http://www.w3.org/2001/XMLSchema#");
-				m.setNsPrefix("inst", uriBase);
-
-				this.ontURI = rj.convert(ifc_file, tempFile.getAbsolutePath(), uriBase);
-				RDFDataMgr.read(m, tempFile.getAbsolutePath());
-				return m;
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				tempFile.deleteOnExit();
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-
-		}
-		System.out.println("IFC-RDF conversion not done");
-		return ModelFactory.createOntologyModel(OntModelSpec.OWL_MEM);
-	}
 
 	/**
 	 * 
@@ -929,7 +881,7 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 		readInOntologyTTL(ontology_model, "psetdef.ttl");
 		List<String> files = FileUtils.getListofFiles("pset", ".ttl");
 		for (String file : files) {
-			file = file.substring(file.indexOf("pset"));
+			//file = file.substring(file.indexOf("Pset"));
 			file = file.replaceAll("\\\\", "/");
 			readInOntologyTTL(ontology_model, file);
 			System.out.println("read ontology file : " + file);
