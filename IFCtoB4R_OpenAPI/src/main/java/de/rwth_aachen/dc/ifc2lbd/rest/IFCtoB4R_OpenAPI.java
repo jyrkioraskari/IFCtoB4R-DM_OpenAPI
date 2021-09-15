@@ -187,6 +187,15 @@ public class IFCtoB4R_OpenAPI {
 
 
 	private Response handle_ifc(String accept_type, File tempIfcFile) {
+		if(accept_type==null)
+		{
+			StringBuilder result_string = new StringBuilder();
+			extractIFCtoB4R(tempIfcFile, result_string, RDFFormat.TURTLE_PRETTY);
+			System.out.println(result_string.toString());
+			return Response.ok(result_string.toString(), "text/turtle").build();
+
+		}
+		else
 		if (accept_type.equals("application/ld+json")) {
 			StringBuilder result_string = new StringBuilder();
 			extractIFCtoB4R(tempIfcFile, result_string, RDFFormat.JSONLD_COMPACT_PRETTY);
