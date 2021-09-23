@@ -153,12 +153,7 @@
 			<version>1.15.1</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.jena/apache-jena-libs -->
-		<dependency>
-			<groupId>org.apache.jena</groupId>
-			<artifactId>apache-jena-libs</artifactId>
-			<version>4.2.0</version>
-			<type>pom</type>
-		</dependency>
+		
 		<dependency>
 			<groupId>com.google.code.gson</groupId>
 			<artifactId>gson</artifactId>
@@ -182,21 +177,7 @@
 			<version>7.7.1</version>
 			<type>pom</type>
 		</dependency>
-		<dependency>
-			<groupId>com.complexible.stardog.jena</groupId>
-			<artifactId>stardog-jena</artifactId>
-			<version>7.7.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.complexible.stardog.sesame</groupId>
-			<artifactId>stardog-sesame-core</artifactId>
-			<version>7.7.1</version>
-		</dependency>
-		<dependency>
-			<groupId>com.complexible.stardog.rdf4j</groupId>
-			<artifactId>stardog-rdf4j</artifactId>
-			<version>7.7.1</version>
-		</dependency>
+
 	</dependencies>
 	<description>An Restful OpenAPI implementation that converts an IFC Step file into Linked Building Data RDF defined in the B4R-DM ontology. The output is compatible with Building Topology Ontology defined in https://w3c-lbd-cg.github.io/bot/.</description>
 </project>

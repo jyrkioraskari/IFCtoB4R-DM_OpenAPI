@@ -1,4 +1,4 @@
-package de.rwth_aachen.dc.ifc2lbd.rest;
+package de.rwth_aachen.dc.ifc2lbd.data_model;
 
 import java.util.HashSet;
 import java.util.Set;

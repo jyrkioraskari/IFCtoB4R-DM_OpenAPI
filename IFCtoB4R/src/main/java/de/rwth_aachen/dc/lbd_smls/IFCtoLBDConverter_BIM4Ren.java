@@ -78,7 +78,7 @@ import de.rwth_aachen.dc.lbd_smls.utils.rdfpath.InvRDFStep;
 import de.rwth_aachen.dc.lbd_smls.utils.rdfpath.RDFStep;
 
 /*
- *  Copyright (c) 2017,2018,2019.2020 Jyrki Oraskari (Jyrki.Oraskari@gmail.f)
+ *  Copyright (c) 2021 Jyrki Oraskari (Jyrki.Oraskari@gmail.fi)
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
