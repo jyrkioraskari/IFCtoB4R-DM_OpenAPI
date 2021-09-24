@@ -13,29 +13,29 @@ import org.apache.jena.riot.RDFFormat;
 import de.rwth_aachen.dc.lbd_smls.IFCtoLBDConverter_BIM4Ren;
 
 public class HandleIFC {
-	public Response handle(String accept_type, File tempIfcFile) {
+	public Response handle(String accept_type, File tempIfcFile,String projectID) {
 		B4RStardogConnection stardog_connection=new B4RStardogConnection();
 		if(accept_type==null)
 		{
 			StringBuilder result_string = new StringBuilder();
-			Model m=extract(tempIfcFile, result_string, RDFFormat.TURTLE_PRETTY);
+			Model m=extract(tempIfcFile, result_string, RDFFormat.TURTLE_PRETTY,projectID);
 			stardog_connection.sendModel(m);
 			return Response.ok(result_string.toString(), "text/turtle").build();
 		}
 		else
 		if (accept_type.equals("application/ld+json")) {
 			StringBuilder result_string = new StringBuilder();
-			Model m=extract(tempIfcFile, result_string, RDFFormat.JSONLD_COMPACT_PRETTY);
+			Model m=extract(tempIfcFile, result_string, RDFFormat.JSONLD_COMPACT_PRETTY,projectID);
 			stardog_connection.sendModel(m);
 			return Response.ok(result_string.toString(), "application/ld+json").build();
 		} else if (accept_type.equals("application/rdf+xml")) {
 			StringBuilder result_string = new StringBuilder();
-			Model m=extract(tempIfcFile, result_string, RDFFormat.RDFXML);
+			Model m=extract(tempIfcFile, result_string, RDFFormat.RDFXML,projectID);
 			stardog_connection.sendModel(m);
 			return Response.ok(result_string.toString(), "application/rdf+xml").build();
 		} else {
 			StringBuilder result_string = new StringBuilder();
-			Model m=extract(tempIfcFile, result_string, RDFFormat.TURTLE_PRETTY);
+			Model m=extract(tempIfcFile, result_string, RDFFormat.TURTLE_PRETTY,projectID);
 			stardog_connection.sendModel(m);
 			return Response.ok(result_string.toString(), "text/turtle").build();
 
@@ -44,9 +44,9 @@ public class HandleIFC {
 
 
 	
-	private Model extract(File ifcFile, StringBuilder result_string, RDFFormat rdfformat) {
+	private Model extract(File ifcFile, StringBuilder result_string, RDFFormat rdfformat,String projectID) {
 		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
-		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://b4r/DUNANT/");
+		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://b4r/"+projectID+"/");
 
 		OutputStream ttl_output = new OutputStream() {
 			private StringBuilder string = new StringBuilder();

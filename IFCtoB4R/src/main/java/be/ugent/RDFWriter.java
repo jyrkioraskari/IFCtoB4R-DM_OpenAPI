@@ -100,7 +100,7 @@ public class RDFWriter {
 	public void parseModel2Stream(OutputStream out) throws IOException {
 		// CHANGED: Jena 3.16.0 JO: 2020, added Context.emptyContext
 		//ttlWriter = StreamRDFWriter.getWriterStream(out, RDFFormat.TURTLE_BLOCKS, Context.emptyContext);
-		ttlWriter = StreamRDFWriter.getWriterStream(out, RDFFormat.TURTLE_BLOCKS);
+		ttlWriter = StreamRDFWriter.getWriterStream(out, RDFFormat.TURTLE_FLAT); // Blocks are harder to filter
 		ttlWriter.base(baseURI);
 		ttlWriter.prefix("ifc", ontNS);
 		ttlWriter.prefix("inst", baseURI);

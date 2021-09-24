@@ -1,31 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
-            
+                
+    
     
     <wb-module deploy-name="IFCtoB4R_OpenAPI">
-                        
+                                
+        
         
         <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
-                        
+                                
+        
         
         <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
-                        
+                                
+        
         
         <wb-resource deploy-path="/" source-path="/src/main/webapp"/>
-        <dependent-module archiveName="IFCtoB4R-1.15.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/IFCtoB4R/IFCtoB4R">
+        <dependent-module archiveName="IFCtoB4R-1.15.2.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/IFCtoB4R/IFCtoB4R">
             <dependency-type>uses</dependency-type>
         </dependent-module>
         <dependent-module archiveName="IFCtoB4RGeometry-1.4.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/IFCtoB4RGeometry/IFCtoB4RGeometry">
             <dependency-type>uses</dependency-type>
         </dependent-module>
-                        
+                                
+        
         
         <property name="java-output-path" value="/mvdXMLCheckerOpenAPI/build/classes"/>
-                        
+                                
+        
         
         <property name="context-root" value="IFCtoB4R_OpenAPI"/>
-                    
+                            
+    
     
     </wb-module>
-        
+            
+
 
 </project-modules>

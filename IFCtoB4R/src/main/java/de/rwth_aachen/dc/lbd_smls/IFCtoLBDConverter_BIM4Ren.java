@@ -847,8 +847,9 @@ public class IFCtoLBDConverter_BIM4Ren {
 				m.setNsPrefix("inst", uriBase);
 
 				this.ontURI = rj.convert(ifc_file, tempFile.getAbsolutePath(), uriBase);
-				File t2 = filterContent(tempFile);
-				RDFDataMgr.read(m, t2.getAbsolutePath());
+				//File t2 = filterContent(tempFile);
+				//RDFDataMgr.read(m, t2.getAbsolutePath());
+				RDFDataMgr.read(m, tempFile.getAbsolutePath());
 
 				return m;
 			} catch (IOException e) {

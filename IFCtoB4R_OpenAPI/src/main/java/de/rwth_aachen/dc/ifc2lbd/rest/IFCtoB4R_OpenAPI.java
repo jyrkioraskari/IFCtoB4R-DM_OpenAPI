@@ -13,6 +13,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
@@ -55,6 +56,10 @@ public class IFCtoB4R_OpenAPI {
 	 * IFC to B4R-DM for BIM4Ren Converts an IFC file into into the Linked Building
 	 * Data RDF (BOT+SMLS)
 	 * 
+	 * Uses "default" project name
+	 * It is used to create the baseURL for the model.	 
+	 * Uploads the model to the background server, if the settings are available at
+	 * <Tomcat>/conf/bim4ren.properties.
 	 * 
 	 * @param ifcFile an IFC STEP file formatted file. The format is specified in ISO 10303-21:2016.
 	 * @return Returnd RDF output. Formats are: JSON-LD, RDF/XML, and TTL
@@ -72,7 +77,41 @@ public class IFCtoB4R_OpenAPI {
 
 			Files.copy(ifcFile, tempIfcFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 			ifcFile.close();
-			return new HandleIFC().handle(accept_type, tempIfcFile);
+			return new HandleIFC().handle(accept_type, tempIfcFile,"default");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.noContent().build();
+	}
+	
+	
+	/**
+	 * IFC to B4R-DM for BIM4Ren Converts an IFC file into into the Linked Building
+	 * Data RDF (BOT+SMLS)
+	 * 
+	 * Uploads the model to the Stardog background server, if the settings are available at
+	 * <Tomcat>/conf/bim4ren.properties.
+	 * 
+	 * @param ifcFile an IFC STEP file formatted file. The format is specified in ISO 10303-21:2016.
+	 * @param projectID is used to create the baseURL for the model.	 
+	 * @return Returnd RDF output. Formats are: JSON-LD, RDF/XML, and TTL
+	 */
+
+	@POST
+	@Path("/convert_IFC-B4R/{projectID}")
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces({ "text/turtle", "application/ld+json", "application/rdf+xml" })
+	public Response convertIFCtoB4R_project(@HeaderParam(HttpHeaders.ACCEPT) String accept_type,
+			@FormDataParam("ifcFile") InputStream ifcFile,@PathParam("projectID") String projectID) {
+		try {
+			File tempIfcFile = File.createTempFile("ifc2lbd-", ".ifc");
+			tempIfcFile.deleteOnExit();
+
+			Files.copy(ifcFile, tempIfcFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+			ifcFile.close();
+			return new HandleIFC().handle(accept_type, tempIfcFile,projectID.trim());
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -89,6 +128,11 @@ public class IFCtoB4R_OpenAPI {
 	 * 
 	 * + Geometry: Bounding Boxes
 	 * 
+	 * Uses "default" project name
+	 * It is used to create the baseURL for the model.	 
+	 * Uploads the model to the Stardog background server, if the settings are available at
+	 * <Tomcat>/conf/bim4ren.properties.
+
 	 * IFC STEP file as input specified in BIM4Ren D2.2. The content is a IFC STEP file formatted file. 
 	 * The format is specified in ISO 10303-21:2016. All commonly used IFC versions are supported.
 	 * 
@@ -106,7 +150,7 @@ public class IFCtoB4R_OpenAPI {
 			tmpWriter.close();
 			tempIfcFile.deleteOnExit();
 
-			return new HandleIFC().handle(accept_type, tempIfcFile);
+			return new HandleIFC().handle(accept_type, tempIfcFile,"default");
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -115,6 +159,47 @@ public class IFCtoB4R_OpenAPI {
 		return Response.noContent().build();
 	}
 
+	/**
+	 * IFC to B4R-DM for BIM4Ren Converts an IFC file into into the Linked Building
+	 * Data RDF (BOT+SMLS)
+	 * 
+	 * https://bim4ren.eu/
+	 * 
+	 * + Geometry: Bounding Boxes
+	 * 
+	 * Uses "default" project name
+	 * It is used to create the baseURL for the model.	 
+	 * Uploads the model to the Stardog background server, if the settings are available at
+	 * <Tomcat>/conf/bim4ren.properties.
+	 * 
+	 * IFC STEP file as input specified in BIM4Ren D2.2. The content is a IFC STEP file formatted file. 
+	 * The format is specified in ISO 10303-21:2016. All commonly used IFC versions are supported.
+	 * 
+	 * @param projectID is used to create the baseURL for the model.	 
+	 * @return Returnd RDF output. Formats are: JSON-LD, RDF/XML, and TTL
+	 */
+	@POST
+	@Path("/convert_IFC-B4R/{projectID}")
+	@Consumes({ MediaType.TEXT_PLAIN, "application/ifc" })
+	@Produces({ "text/turtle", "application/ld+json", "application/rdf+xml" })
+	public Response convertIFCtoB4Rn_project(@HeaderParam(HttpHeaders.ACCEPT) String accept_type, String ifc_step_content,@PathParam("projectID") String projectID) {
+		try {
+			File tempIfcFile = File.createTempFile("ifc2lbd-", ".ifc");
+			FileWriter tmpWriter = new FileWriter(tempIfcFile);
+			tmpWriter.write(ifc_step_content);
+			tmpWriter.close();
+			tempIfcFile.deleteOnExit();
+
+			return new HandleIFC().handle(accept_type, tempIfcFile,projectID.trim());
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return Response.noContent().build();
+	}
+	
+	
 	/**
 	 * IfcOWLtoLBD for BIM4Ren Converts an IfcOWL file into into the Linked Building
 	 * Data RDF that uses the B4R-DM ontology

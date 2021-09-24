@@ -1,8 +1,11 @@
 package de.rwth_aachen.dc.ifc2lbd.service;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 import org.apache.jena.rdf.model.Model;
 
@@ -21,15 +24,27 @@ public class B4RStardogConnection {
 
 	static StardogContext getContext() {
 		if (sg == null) {
-			sg = new B4RStardogConnection.StardogContext();
-			InitialContext context;
 			try {
-				context = new InitialContext();
-				Context xmlNode = (Context) context.lookup("java:comp/env");
-				sg.stardog_server = (String) xmlNode.lookup("stardog_server");
-				sg.stardog_user = (String) xmlNode.lookup("stardog_user");
-				sg.stardog_password = (String) xmlNode.lookup("stardog_password");
-			} catch (NamingException e) {
+				File configDir = new File(System.getProperty("catalina.base"), "conf");
+				File configFile = new File(configDir, "bim4ren.properties");
+				if(!configFile.exists())
+				{
+					System.err.println("bim4ren.properties dowe not exist in: <tomcat>/conf");
+					return null;
+				}
+				sg = new B4RStardogConnection.StardogContext();
+				
+				InputStream stream = new FileInputStream(configFile);
+				Properties props = new Properties();
+				props.load(stream);
+				
+				sg.stardog_server = props.getProperty("stardog_server");
+				sg.stardog_user = props.getProperty("stardog_user");
+				sg.stardog_password = props.getProperty("stardog_password");
+
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
@@ -38,6 +53,8 @@ public class B4RStardogConnection {
 
 	public void sendModel(Model m) {
 		StardogContext sg=getContext();
+		if(sg==null)
+			return;
 		Connection aConn = ConnectionConfiguration.to("b4r") // the name of the db to connect to
 				.server(sg.stardog_server).credentials(sg.stardog_user,sg.stardog_password) // credentials to use while
 																							// connecting
