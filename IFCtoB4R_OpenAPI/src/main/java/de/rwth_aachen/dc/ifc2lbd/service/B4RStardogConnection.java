@@ -32,11 +32,13 @@ public class B4RStardogConnection {
 					System.err.println("bim4ren.properties dowe not exist in: <tomcat>/conf");
 					return null;
 				}
-				sg = new B4RStardogConnection.StardogContext();
-				
 				InputStream stream = new FileInputStream(configFile);
 				Properties props = new Properties();
 				props.load(stream);
+				if(props.getProperty("stardog_server")==null)
+					return null;
+				sg = new B4RStardogConnection.StardogContext();
+				
 				
 				sg.stardog_server = props.getProperty("stardog_server");
 				sg.stardog_user = props.getProperty("stardog_user");
