@@ -40,9 +40,9 @@ public class B4RStardogConnection {
 				sg = new B4RStardogConnection.StardogContext();
 				
 				
-				sg.stardog_server = props.getProperty("stardog_server");
-				sg.stardog_user = props.getProperty("stardog_user");
-				sg.stardog_password = props.getProperty("stardog_password");
+				sg.stardog_server = props.getProperty("stardog_server").trim();
+				sg.stardog_user = props.getProperty("stardog_user").trim();
+				sg.stardog_password = props.getProperty("stardog_password").trim();
 
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
