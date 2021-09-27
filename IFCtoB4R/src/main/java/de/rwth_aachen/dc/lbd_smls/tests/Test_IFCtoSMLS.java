@@ -4,14 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 
 import org.apache.jena.rdf.model.Model;
-import org.lbd.ifc2lbd.application_messaging.events.IFCtoLBD_SystemStatusEvent;
-
-import com.google.common.eventbus.EventBus;
 
 import de.rwth_aachen.dc.lbd_smls.IFCtoLBDConverter_BIM4Ren;
 

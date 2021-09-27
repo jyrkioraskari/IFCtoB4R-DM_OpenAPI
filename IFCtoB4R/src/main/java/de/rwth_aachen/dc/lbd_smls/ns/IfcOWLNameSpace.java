@@ -17,7 +17,6 @@
 
 package de.rwth_aachen.dc.lbd_smls.ns;
 
-import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 
 public class IfcOWLNameSpace extends abstract_NS {

@@ -40,9 +40,10 @@ public class IFC_Geolocation {
 
 
     private static Property ifcSiteProperty;
-    private static Resource ifcSiteResource;
-    private static List latitude = new ArrayList();
-    private static List longitude = new ArrayList();
+    @SuppressWarnings("unused")
+	private static Resource ifcSiteResource;
+    private static List<String> latitude = new ArrayList<String>();
+    private static List<String> longitude = new ArrayList<String>();
     
     private final String ns1;
     private final String ns3;
@@ -90,15 +91,15 @@ public class IFC_Geolocation {
     
     
     //Author Kris McGlinn - This method changes the sign of the longitude or latitude values in a List
-    private List longLatNegativeConvert(List l)
+    private List<String> longLatNegativeConvert(List<String> l)
     {
-        String s = (String)l.get(l.size()-1);
+        String s = l.get(l.size()-1);
         int x = Integer.parseInt(s);
         if(x<0)
         {           
             for(int i = 0; i <l.size()-1; i++)
             {
-                s = (String)l.get(i);
+                s = l.get(i);
                 l.set(i, s.substring(1));
                 
             }

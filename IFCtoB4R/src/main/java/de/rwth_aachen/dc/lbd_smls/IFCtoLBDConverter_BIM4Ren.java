@@ -1053,6 +1053,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 		return tempFile;
 	}
 
+	@SuppressWarnings("deprecation")
 	private List<String> split(String s) {
 		List<String> ret = new ArrayList<>();
 		int state = 0;
@@ -1268,7 +1269,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			rule_txt = setIFC_NS(rule_txt, ontology_URI);
 			Files.write(tempFile, rule_txt.getBytes(StandardCharsets.UTF_8));
 
-			List rules = Rule.rulesFromURL(tempFile.toFile().getAbsolutePath());
+			List<Rule> rules = Rule.rulesFromURL(tempFile.toFile().getAbsolutePath());
 			System.out.println("rules: " + rules.size());
 			GenericRuleReasoner reasoner = new GenericRuleReasoner(rules);
 			System.out.println("rules 1");
@@ -1277,11 +1278,15 @@ public class IFCtoLBDConverter_BIM4Ren {
 			//Model local_ontology_model=ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM_TRANS_INF); // Does not work
 			Model local_ontology_model=ModelFactory.createOntologyModel(OntModelSpec.RDFS_MEM_RDFS_INF);  //RDFS_MEM_RDFS_INF
 			
+			@SuppressWarnings("unused")
 			Resource sot_System= local_ontology_model.createResource("http://www.bim4ren.eu/sot#System");
+			@SuppressWarnings("unused")
 			Resource sot_SystemComponent= local_ontology_model.createResource("http://www.bim4ren.eu/sot#SystemComponent");
+			@SuppressWarnings("unused")
 			Resource sot_TransportElement= local_ontology_model.createResource("http://www.bim4ren.eu/sot#TransportElement");
+			@SuppressWarnings("unused")
 			Resource sot_TerminalElement= local_ontology_model.createResource("http://www.bim4ren.eu/sot#TerminalElement");
-			
+			@SuppressWarnings("unused")
 			Property sot_hasElements = local_ontology_model.createProperty("http://www.bim4ren.eu/sot#hasElements");
 			
 							
@@ -1294,6 +1299,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			String ontology_txt = IOUtils.toString(SOT_inputStream, StandardCharsets.UTF_8.name());
 			ontology_txt = setIFC_NS(ontology_txt, ontology_URI);
 			Files.write(ontology_tempFile, ontology_txt.getBytes(StandardCharsets.UTF_8));
+			@SuppressWarnings("unused")
 			InputStream SOT_tmpinputStream = new FileInputStream(ontology_tempFile.toFile());
 			RDFDataMgr.read(local_ontology_model, SOT_inputStream, Lang.TTL);
 			//reasoner.bindSchema(ontology);
@@ -1398,7 +1404,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 			rule_txt = setIFC_NS(rule_txt, ontology_URI);
 			Files.write(tempFile, rule_txt.getBytes(StandardCharsets.UTF_8));
 
-			List rules = Rule.rulesFromURL(tempFile.toFile().getAbsolutePath());
+			List<Rule> rules = Rule.rulesFromURL(tempFile.toFile().getAbsolutePath());
 			System.out.println("rules: " + rules.size());
 			GenericRuleReasoner reasoner = new GenericRuleReasoner(rules);
 			System.out.println("rules 1");
