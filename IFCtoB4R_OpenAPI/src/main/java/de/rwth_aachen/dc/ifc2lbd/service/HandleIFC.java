@@ -46,7 +46,7 @@ public class HandleIFC {
 	
 	private Model extract(File ifcFile, StringBuilder result_string, RDFFormat rdfformat,String projectID) {
 		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
-		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://b4r/"+projectID+"/");
+		Model m = lbdconverter.convertToModel(ifcFile.getAbsolutePath(), "https://b4r/"+projectID+"/");
 
 		OutputStream ttl_output = new OutputStream() {
 			private StringBuilder string = new StringBuilder();

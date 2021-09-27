@@ -20,7 +20,7 @@ public class Test_IFCtoSMLS {
 	static private void extractLBD_SMLS(File ifcFile, StringBuilder result_string) {
 		long start=System.currentTimeMillis();
 		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
-		Model m = lbdconverter.convert(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset#");
+		Model m = lbdconverter.convertToModel(ifcFile.getAbsolutePath(), "https://dot.dc.rwth-aachen.de/IFCtoLBDset#");
 		long stop=System.currentTimeMillis();
 
 		System.out.println("Ajo;"+(stop-start));

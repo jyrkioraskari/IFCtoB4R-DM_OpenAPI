@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.rwth-aachen.dc.ifctolbd</groupId>
 	<artifactId>IFCtoB4R_OpenAPI</artifactId>
-	<version>1.15.2</version>
+	<version>1.16.0</version>
 	<packaging>war</packaging>
 	<name>IFC to B4R-DM  OpenAPI Interface</name>
 
@@ -150,7 +150,7 @@
 		<dependency>
 			<groupId>de.rwth-aachen.dc.ifctolbd</groupId>
 			<artifactId>IFCtoB4R</artifactId>
-			<version>1.15.2</version>
+			<version>1.16.0</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.apache.jena/apache-jena-libs -->
 		

@@ -1,8 +1,6 @@
 
 package de.rwth_aachen.dc.lbd_smls;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +14,8 @@ import java.util.UUID;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -35,7 +35,6 @@ import org.apache.jena.vocabulary.RDFS;
 
 import com.openifctools.guidcompressor.GuidCompressor;
 
-import be.ugent.IfcSpfReader;
 import de.rwth_aachen.dc.lbd_smls.geo.IFC_Geolocation;
 import de.rwth_aachen.dc.lbd_smls.geo.WktLiteral;
 import de.rwth_aachen.dc.lbd_smls.ns.BOT;
@@ -87,8 +86,9 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 	private Map<String, PropertySet_B4R> propertysets;
 
 	private Model lbd_general_output_model;
+	private Dataset lbd_dataset = null;
 
-	public Model convert(String ifcowl_filename, String uriBase) {
+	public Model convertToModel(String ifcowl_filename, String uriBase) {
 		this.propertysets = new HashMap<>();
 		this.ifcowl_product_map = new HashMap<>();
 
@@ -96,11 +96,11 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 			uriBase += "#";
 		this.uriBase = Optional.of(uriBase);
 
-		convert(ifcowl_filename);
+		convertToModel(ifcowl_filename);
 		return lbd_general_output_model;
 	}
 
-	public Model convert(String ifcowl_filename) {
+	public Model convertToModel(String ifcowl_filename) {
 		this.propertysets = new HashMap<>();
 		this.ifcowl_product_map = new HashMap<>();
 
@@ -131,6 +131,25 @@ public class IfcOWLtoLBDConverter_BIM4Ren {
 		conversion();
 		return lbd_general_output_model;
 	}
+	
+	public Dataset convertToDataset(String ifc_filename) {
+		if(this.uriBase.isEmpty())
+			return null;
+		Model m=convertToModel(ifc_filename);
+		Dataset lbd_dataset = DatasetFactory.create();
+		if(this.uriBase.isEmpty())
+			return null;
+	    lbd_dataset.addNamedModel(this.uriBase.get(), m);
+		return lbd_dataset;
+	}
+	
+	public Dataset convertToDataset(String ifc_filename, String uriBase) {
+		Model m=convertToModel(ifc_filename,uriBase);
+		Dataset lbd_dataset = DatasetFactory.create();
+	    lbd_dataset.addNamedModel(uriBase, m);
+		return lbd_dataset;
+	}
+
 
 	Set<Resource> has_geometry = new HashSet<>();
 

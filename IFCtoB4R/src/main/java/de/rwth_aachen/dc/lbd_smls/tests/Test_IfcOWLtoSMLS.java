@@ -12,7 +12,7 @@ public class  Test_IfcOWLtoSMLS{
 	
 	static private void extractIfcOWLtoBD_SMLS(File ifcOwlFile, StringBuilder result_string) {
 		IfcOWLtoLBDConverter_BIM4Ren lbdconverter = new IfcOWLtoLBDConverter_BIM4Ren();
-		Model m = lbdconverter.convert(ifcOwlFile.getAbsolutePath());
+		Model m = lbdconverter.convertToModel(ifcOwlFile.getAbsolutePath());
 
 		OutputStream ttl_output = new OutputStream() {
 			private StringBuilder string = new StringBuilder();

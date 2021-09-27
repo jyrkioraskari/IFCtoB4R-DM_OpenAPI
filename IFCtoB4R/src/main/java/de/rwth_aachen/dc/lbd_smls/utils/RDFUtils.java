@@ -12,9 +12,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.jena.query.Dataset;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFFormat;
 import org.apache.jena.vocabulary.RDF;
 import org.lbd.ifc2lbd.application_messaging.events.IFCtoLBD_SystemStatusEvent;
 
@@ -62,6 +65,23 @@ public class RDFUtils {
 					Charset.forName("UTF-8").newEncoder());
 
 			m.write(fo, "TTL");
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			eventBus.post(new IFCtoLBD_SystemStatusEvent("Error : " + e.getMessage()));
+		} finally {
+			if (fo != null)
+				try {
+					fo.close();
+				} catch (IOException e) {
+				}
+		}
+	}
+
+	public static void writeDataset(Dataset ds, String target_file, EventBus eventBus) {
+		FileOutputStream fo = null; // Outputstream for RDFDataMgr.write is deprecated
+		try {
+			fo = new FileOutputStream(new File(target_file));
+			RDFDataMgr.write(fo, ds, RDFFormat.TRIG_PRETTY);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			eventBus.post(new IFCtoLBD_SystemStatusEvent("Error : " + e.getMessage()));
@@ -137,7 +157,8 @@ public class RDFUtils {
 		RDFStep[] path = { new RDFStep(RDF.type) };
 		// When ontology reasoning is used, some exotic types may be added
 		// To get the exac IFC type, ontlogy reasoned data should not be used here
-		return RDFUtils.pathQuery(r, path).stream().map(rn -> rn.asResource()).filter(x->x.getLocalName()!=null).findAny();
+		return RDFUtils.pathQuery(r, path).stream().map(rn -> rn.asResource()).filter(x -> x.getLocalName() != null)
+				.findAny();
 	}
 
 }

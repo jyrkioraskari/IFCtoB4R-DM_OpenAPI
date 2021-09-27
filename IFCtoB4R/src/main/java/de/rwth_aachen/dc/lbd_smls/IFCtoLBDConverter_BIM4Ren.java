@@ -28,6 +28,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jena.datatypes.RDFDatatype;
 import org.apache.jena.datatypes.TypeMapper;
 import org.apache.jena.ontology.OntModelSpec;
+import org.apache.jena.query.Dataset;
+import org.apache.jena.query.DatasetFactory;
 import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
@@ -113,9 +115,10 @@ public class IFCtoLBDConverter_BIM4Ren {
 	private Map<String, PropertySet_B4R> propertysets;
 
 	private Model lbd_general_output_model;
+	
 	private IFCBoundingBoxes bounding_boxes = null;
 
-	public Model convert(String ifc_filename, String uriBase) {
+	public Model convertToModel(String ifc_filename, String uriBase) {
 		System.out.println("convert");
 		this.propertysets = new HashMap<>();
 		this.ifcowl_product_map = new HashMap<>();
@@ -159,8 +162,15 @@ public class IFCtoLBDConverter_BIM4Ren {
 		
 		convert_SOT();
 		//analyse_SOT2(ifcowl_model, this.ontURI.get());
-		writeModel(lbd_general_output_model, ifc_model_file_base + "_BOT_SMLS_model.ttl");
+		//writeModel(lbd_general_output_model, ifc_model_file_base + "_BOT_SMLS_model.ttl");
 		return lbd_general_output_model;
+	}
+
+	public Dataset convertToDataset(String ifc_filename, String uriBase) {
+		Model m=convertToModel(ifc_filename, uriBase);
+		Dataset lbd_dataset = DatasetFactory.create();
+	    lbd_dataset.addNamedModel(uriBase, m);
+		return lbd_dataset;
 	}
 
 	public static void writeModel(Model m, String target_file) {
