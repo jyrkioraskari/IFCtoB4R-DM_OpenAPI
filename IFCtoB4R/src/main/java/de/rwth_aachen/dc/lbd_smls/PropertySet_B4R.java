@@ -44,10 +44,12 @@ import de.rwth_aachen.dc.lbd_smls.utils.StringOperations;
 public class PropertySet_B4R {
 	private final Map<String, String> unitmap;
 
+	@SuppressWarnings("unused")
 	private class PsetProperty {
 		final Property p; // Jena RDF property
 		final Resource r; // Jena RDF resource object
 
+		@SuppressWarnings("unused")
 		public PsetProperty(Property p, Resource r) {
 			super();
 			this.p = p;
@@ -55,8 +57,11 @@ public class PropertySet_B4R {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private final String uriBase;
+	@SuppressWarnings("unused")
 	private final Model lbd_model;
+	@SuppressWarnings("unused")
 	private String propertyset_name;
 
 	private final Map<String, RDFNode> mapPnameValue = new HashMap<>();

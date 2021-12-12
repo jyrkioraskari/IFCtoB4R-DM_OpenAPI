@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.rwth-aachen.dc.ifctolbd</groupId>
 	<artifactId>IFCtoB4R</artifactId>
-	<version>1.16.0</version>
+	<version>1.16.1</version>
 
 	<organization>
 		<name>IFC-B4R DM</name>
@@ -47,21 +47,51 @@
 			<groupId>com.complexible.stardog.jena</groupId>
 			<artifactId>stardog-jena</artifactId>
 			<version>7.7.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-iostreams</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-1.2-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.complexible.stardog.sesame</groupId>
 			<artifactId>stardog-sesame-core</artifactId>
 			<version>7.7.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-iostreams</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-1.2-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.complexible.stardog.rdf4j</groupId>
 			<artifactId>stardog-rdf4j</artifactId>
 			<version>7.7.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-iostreams</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-1.2-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>de.rwth-aachen.dc.lbd</groupId>
 			<artifactId>IFCtoB4RGeometry</artifactId>
-			<version>1.4</version>
+			<version>1.16.1</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.thoughtworks.xstream/xstream -->
 		<dependency>

@@ -1,10 +1,10 @@
 # IFCtoB4R-DM_OpenAPI
-Version 1.15.2
+Version 1.16.1
 
 An Restful OpenAPI implementation that converts an IFC Step file into Linked Building Data RDF defined in the B4R-DM ontology.
 The output is compatible with Building Topology Ontology defined in https://w3c-lbd-cg.github.io/bot/. 
 
-To activate the Stardog connection, copy the bim4ren.properties to your <Tomcat>/conf directory and edit the
+To activate the Stardog connection, copy the Tomcat_config/bim4ren.properties to your <Tomcat>/conf directory and edit the
 properties to contain the needed values. When set, the converter sends the resulting LBD content to the RDF Store.
 
 

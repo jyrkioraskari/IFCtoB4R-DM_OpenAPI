@@ -875,7 +875,7 @@ public class IFCtoLBDConverter_BIM4Ren {
 		System.out.println("IFC-RDF conversion not done");
 		return ModelFactory.createDefaultModel();
 	}
-
+	@SuppressWarnings("unused")
 	private File filterContent(File whole_content_file) {
 		File tempFile = null;
 		int state = 0;
