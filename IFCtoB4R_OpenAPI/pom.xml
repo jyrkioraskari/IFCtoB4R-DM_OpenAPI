@@ -32,13 +32,9 @@
 					</configuration>
 				</plugin>
 				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.0</version>
-					<configuration>
-						<source>11</source>
-						<target>11</target>
-						<webXml>src\main\webapp\WEB-INF\web.xml</webXml>
-					</configuration>
+					<version>3.8.0</version>
 				</plugin>
 
 				<plugin>
@@ -90,6 +86,8 @@
 		<jersey2.version>2.35</jersey2.version>
 		<tomcat.version>9.0.53</tomcat.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
 	</properties>
 	<dependencies>
 
