@@ -11,8 +11,9 @@ import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFFormat;
 
 import de.rwth_aachen.dc.lbd_smls.IFCtoLBDConverter_BIM4Ren;
+import de.rwth_aachen.dc.lbd_smls.IFCtoifcOWL_BIM4Ren;
 
-public class HandleIFC {
+public class HandleIFC2IfcOWL {
 	public Response handle(String accept_type, File tempIfcFile,String projectID) {
 		B4RStardogConnection stardog_connection=new B4RStardogConnection();
 		if(accept_type==null)
@@ -45,8 +46,8 @@ public class HandleIFC {
 
 	
 	private Model extract(File ifcFile, StringBuilder result_string, RDFFormat rdfformat,String projectID) {
-		IFCtoLBDConverter_BIM4Ren lbdconverter = new IFCtoLBDConverter_BIM4Ren();
-		Model m = lbdconverter.convertToModel(ifcFile.getAbsolutePath(), "https://b4r/"+projectID+"/");
+		IFCtoifcOWL_BIM4Ren converter = new IFCtoifcOWL_BIM4Ren();
+		Model m = converter.convertToModel(ifcFile.getAbsolutePath(), "https://b4r/"+projectID+"/");
 
 		OutputStream ttl_output = new OutputStream() {
 			private StringBuilder string = new StringBuilder();
